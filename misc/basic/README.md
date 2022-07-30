@@ -1,0 +1,1 @@
+namespace creation by unshare https://qiita.com/Ewokkkkk/items/f2fc09d09584bcb135da
