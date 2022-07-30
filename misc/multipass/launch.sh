@@ -46,6 +46,7 @@ packages:
   - xz-utils
 
 runcmd:
+ - sudo snap install --classic --beta zig
  - mkdir $HOME/zls && cd $HOME/zls && curl -L https://github.com/zigtools/zls/releases/download/0.9.0/x86_64-linux.tar.xz | tar -xJ --strip-components=1
 _EOF_
 fi
