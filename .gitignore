@@ -17,3 +17,5 @@ zig-out/
 /build-*/
 /docgen_tmp/
 cloud-config.yaml
+.zigmod
+deps.zig
