@@ -14,6 +14,7 @@ pub fn main() !void {
         const relative_path = try fs.path.join(allocator, &[_][]const u8{"."});
         break :blk try fs.realpathAlloc(allocator, relative_path);
     };
+    defer allocator.free(base_path);
 
     const message = "Hello, world!\n";
     // if you want to create another subdir, use fs.path.join
@@ -24,6 +25,7 @@ pub fn main() !void {
     };
     try fs.accessAbsolute(base_path, .{});
     var subdir = try fs.openDirAbsolute(base_path, .{});
+    defer subdir.close();
     subdir.writeFile("test.txt", message) catch |err| switch (err) {
         else => return err,
     };
