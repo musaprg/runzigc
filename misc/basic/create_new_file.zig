@@ -25,7 +25,6 @@ pub fn main() !void {
     try fs.accessAbsolute(base_path, .{});
     var subdir = try fs.openDirAbsolute(base_path, .{});
     subdir.writeFile("test.txt", message) catch |err| switch (err) {
-        error.PathAlreadyExists => {},
         else => return err,
     };
 }
