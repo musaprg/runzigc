@@ -13,13 +13,6 @@ const sync_t = enum(c_int) {
     SYNC_USERMAP_ACK = 0x41,
 };
 
-// no interface natively in zig for now
-// imported from https://github.com/ziglang/zig/blob/0.9.x/lib/libc/include/any-linux-any/linux/capability.h
-const CAP_SETGID = 6;
-const CAP_SETUID = 7;
-const _LINUX_CAPABILITY_VERSION_3 = 0x20080522;
-const _LINUX_CAPABILITY_U32S_3 = 2;
-
 fn parent(allocator: mem.Allocator, cpid: os.pid_t, syncpipe: [2]os.fd_t) !void {
     var syncfd = syncpipe[0];
     os.close(syncpipe[1]);
