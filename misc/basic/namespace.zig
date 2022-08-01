@@ -90,7 +90,6 @@ fn child(allocator: mem.Allocator, syncpipe: [2]os.fd_t) !void {
 
     var synctag: []const u8 = &[_]u8{@intCast(u8, @enumToInt(sync_t.SYNC_USERMAP_PLS))};
     if (os.write(syncfd, synctag)) |size| {
-        print("wrote {} bytes to parent\n", .{size});
         if (size != 1) {
             return error.Unexpected;
         }
@@ -99,7 +98,6 @@ fn child(allocator: mem.Allocator, syncpipe: [2]os.fd_t) !void {
     }
     var buf: [1]u8 = undefined;
     if (os.read(syncfd, &buf)) |size| {
-        print("read {} bytes from parent\n", .{size});
         if (size != 1) {
             return error.Unexpected;
         }
