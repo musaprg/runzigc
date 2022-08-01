@@ -33,16 +33,6 @@ fn parent(allocator: mem.Allocator, cpid: os.pid_t, syncpipe: [2]os.fd_t) !void 
         .SYNC_USERMAP_PLS => {},
         else => unreachable,
     }
-    var synctag: []const u8 = &[_]u8{@intCast(u8, @enumToInt(sync_t.SYNC_USERMAP_ACK))};
-    if (os.write(syncfd, synctag)) |size| {
-        print("wrote {} bytes to child\n", .{size});
-        if (size != 1) {
-            return error.Unexpected;
-        }
-    } else |err| {
-        return err;
-    }
-
     // uid_map and gid_map are only writable from parent process.
     var uid = linux.getpid();
     var gid = linux.getpid();
@@ -69,6 +59,16 @@ fn parent(allocator: mem.Allocator, cpid: os.pid_t, syncpipe: [2]os.fd_t) !void 
 
     try uid_map.writer().writeAll(uid_map_contents);
     try gid_map.writer().writeAll(gid_map_contents);
+
+    var synctag: []const u8 = &[_]u8{@intCast(u8, @enumToInt(sync_t.SYNC_USERMAP_ACK))};
+    if (os.write(syncfd, synctag)) |size| {
+        print("wrote {} bytes to child\n", .{size});
+        if (size != 1) {
+            return error.Unexpected;
+        }
+    } else |err| {
+        return err;
+    }
 
     var result = os.waitpid(cpid, 0); // i'm not sure how to handle WaitPidResult.status with zig, there's no macro like WIFEXITED
     _ = result.status;
