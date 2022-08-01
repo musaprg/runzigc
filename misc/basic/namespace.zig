@@ -20,8 +20,6 @@ fn parent(allocator: mem.Allocator, cpid: os.pid_t, syncpipe: [2]os.fd_t) !void 
     print("parent pid: {}\n", .{linux.getpid()});
     print("child pid: {}\n", .{cpid});
 
-    _ = allocator;
-
     var buf: [1]u8 = undefined;
     if (os.read(syncfd, &buf)) |size| {
         print("read {} bytes from child\n", .{size});
@@ -46,8 +44,8 @@ fn parent(allocator: mem.Allocator, cpid: os.pid_t, syncpipe: [2]os.fd_t) !void 
     }
 
     // uid_map and gid_map are only writable from parent process.
-    const uid = 1000;
-    const gid = 1000;
+    var uid = linux.getpid();
+    var gid = linux.getpid();
 
     var string_pid = try fmt.allocPrint(allocator, "{}", .{cpid});
     defer allocator.free(string_pid);
@@ -80,13 +78,13 @@ fn child(allocator: mem.Allocator, syncpipe: [2]os.fd_t) !void {
     var syncfd = syncpipe[1];
     os.close(syncpipe[0]);
 
+    _ = allocator;
+
     const flags = linux.CLONE.NEWIPC | linux.CLONE.NEWNET | linux.CLONE.NEWUSER;
     if (linux.unshare(flags) == -1) {
         print("unshare failed\n", .{});
         os.exit(1);
     }
-
-    _ = allocator;
 
     var synctag: []const u8 = &[_]u8{@intCast(u8, @enumToInt(sync_t.SYNC_USERMAP_PLS))};
     if (os.write(syncfd, synctag)) |size| {
@@ -109,9 +107,14 @@ fn child(allocator: mem.Allocator, syncpipe: [2]os.fd_t) !void {
         else => unreachable,
     }
 
+    if (linux.setresuid(0, 0, 0) == -1) {
+        print("setresuid failed\n", .{});
+        return error.Unexpected;
+    }
+
     const child_args = [_:null]?[*:0]const u8{ "/bin/sh", null };
     const envp = [_:null]?[*:0]const u8{null};
-    try os.execveZ("/bin/sh", &child_args, &envp) catch return;
+    return os.execveZ("/bin/sh", &child_args, &envp);
 }
 
 // Use fork and unshare to create a new process with a new PID
