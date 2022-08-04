@@ -1,5 +1,4 @@
 const std = @import("std");
-const deps = @import("./deps.zig");
 
 pub fn build(b: *std.build.Builder) void {
     // Standard target options allows the person running `zig build` to choose
@@ -12,10 +11,13 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("zigc", "src/main.zig");
+    const exe = b.addExecutable("runzigc", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
-    deps.addAllTo(exe);
+
+    // Dependencies
+    exe.addPackagePath("zig-arg", "lib/zig-arg/src/lib.zig");
+
     exe.install();
 
     const run_cmd = exe.run();
