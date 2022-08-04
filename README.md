@@ -1,11 +1,12 @@
 # runzigc
 
-A toy container runtime written in Zig
+A toy container runtime written in Zig.
 
-## Prerequisities
+## Prerequisites
 
-- zigmod
-    - zig v0.9.1, you need to use v93. https://github.com/nektro/zigmod/releases/download/v93/zigmod-x86_64-linux
+CAUTION: Zig language is still under active development, so building with the latest zig release might fail.
+
+- [zig v0.9.1](https://github.com/ziglang/zig/releases/tag/0.9.1)
 
 ## Build
 
