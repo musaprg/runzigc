@@ -1,3 +1,3 @@
-# misc
+# labo
 
 a.k.a playground
