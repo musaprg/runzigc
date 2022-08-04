@@ -1,0 +1,3 @@
+[submodule "lib/zig-arg"]
+	path = lib/zig-arg
+	url = https://github.com/PrajwalCH/zig-arg
