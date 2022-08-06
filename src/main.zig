@@ -21,6 +21,23 @@ const sync_t = enum(c_int) {
     SYNC_USERMAP_ACK = 0x41,
 };
 
+const sys_mountflags_t = enum(u32) {
+    MS_DIRSYNC = 0x80,
+    MS_MANDLOCK = 0x40,
+    MS_MOVE = 0x2000,
+    MS_NOATIME = 0x400,
+    MS_NODEV = 0x4,
+    MS_NODIRATIME = 0x800,
+    MS_NOEXEC = 0x8,
+    MS_NOSUID = 0x2,
+    MS_RDONLY = 0x1,
+    MS_REC = 0x4000,
+    MS_REMOUNT = 0x20,
+    MS_SILENT = 0x8000,
+    MS_STRICTATIME = 0x1000,
+    MS_SYNCHRONOUS = 0x10,
+};
+
 pub const SetHostNameError = error{PermissionDenied} || os.UnexpectedError;
 
 // TODO(musaprg): dirty hack, fix it
@@ -45,6 +62,17 @@ fn init(allocator: mem.Allocator) !void {
         return err;
     };
 
+    // TODO(musaprg): refactor this line
+    var mount_result = linux.mount("proc", "/proc", "proc", @enumToInt(sys_mountflags_t.MS_NOEXEC) | @enumToInt(sys_mountflags_t.MS_NOSUID) | @enumToInt(sys_mountflags_t.MS_NODEV), @ptrToInt(""));
+    switch (os.errno(mount_result)) {
+        .SUCCESS => {},
+        .PERM => return error.PermissionDenied,
+        else => |err| {
+            // TODO(musaprg): define error type
+            return os.unexpectedErrno(err);
+        },
+    }
+
     const child_args = [_:null]?[*:0]const u8{ "/bin/sh", null };
     const envp = [_:null]?[*:0]const u8{null};
     return os.execveZ("/bin/sh", &child_args, &envp);
@@ -68,7 +96,7 @@ fn run(allocator: mem.Allocator) !void {
     if (cpid == 0) { // child
         var syncfd = syncsocket[0];
 
-        const flags = linux.CLONE.NEWIPC | linux.CLONE.NEWNET | linux.CLONE.NEWUSER | linux.CLONE.NEWUTS;
+        const flags = linux.CLONE.NEWIPC | linux.CLONE.NEWNET | linux.CLONE.NEWUSER | linux.CLONE.NEWUTS | linux.CLONE.NEWPID | linux.CLONE.NEWNS;
         if (linux.unshare(flags) == -1) {
             log.debug("unshare failed\n", .{});
             os.exit(1);
