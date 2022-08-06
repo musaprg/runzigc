@@ -40,7 +40,7 @@ pub fn main(argc: c_int, argv: [*][*:0]u8) callconv(.C) c_int {
     }
 
     if (args.len == 2) {
-        print("Hello, {s}\n",.{args[1]});
+        print("Hello, {s}\n", .{args[1]});
     } else {
         std.log.info("{s}", .{usage});
         fatal("expected command argument", .{});
