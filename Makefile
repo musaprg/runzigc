@@ -1,3 +1,6 @@
+.PHONY: build
+build:
+	zig build -p ./zig-out
 
-build: src/*.zig
-	zig build
+clean:
+	rm -rf ./zig-out/*
