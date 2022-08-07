@@ -36,6 +36,7 @@ const sys_mountflags_t = enum(u32) {
     MS_SILENT = 0x8000,
     MS_STRICTATIME = 0x1000,
     MS_SYNCHRONOUS = 0x10,
+    MS_PRIVATE = 0x40000,
 };
 
 pub const SetHostNameError = error{PermissionDenied} || os.UnexpectedError;
@@ -62,9 +63,29 @@ fn init(allocator: mem.Allocator) !void {
         return err;
     };
 
+    var status = linux.mount("none", "/", "", @enumToInt(sys_mountflags_t.MS_REC) | @enumToInt(sys_mountflags_t.MS_PRIVATE), @ptrToInt(""));
+    switch (os.errno(status)) {
+        .SUCCESS => {},
+        .PERM => return error.PermissionDenied,
+        else => |err| {
+            // TODO(musaprg): define error type
+            return os.unexpectedErrno(err);
+        },
+    }
+
+    status = linux.mount("none", "/proc", "", @enumToInt(sys_mountflags_t.MS_REC) | @enumToInt(sys_mountflags_t.MS_PRIVATE), @ptrToInt(""));
+    switch (os.errno(status)) {
+        .SUCCESS => {},
+        .PERM => return error.PermissionDenied,
+        else => |err| {
+            // TODO(musaprg): define error type
+            return os.unexpectedErrno(err);
+        },
+    }
+
     // TODO(musaprg): refactor this line
-    var mount_result = linux.mount("proc", "/proc", "proc", @enumToInt(sys_mountflags_t.MS_NOEXEC) | @enumToInt(sys_mountflags_t.MS_NOSUID) | @enumToInt(sys_mountflags_t.MS_NODEV), @ptrToInt(""));
-    switch (os.errno(mount_result)) {
+    status = linux.mount("proc", "/proc", "proc", @enumToInt(sys_mountflags_t.MS_NOEXEC) | @enumToInt(sys_mountflags_t.MS_NOSUID) | @enumToInt(sys_mountflags_t.MS_NODEV), @ptrToInt(""));
+    switch (os.errno(status)) {
         .SUCCESS => {},
         .PERM => return error.PermissionDenied,
         else => |err| {
@@ -197,6 +218,8 @@ fn run(allocator: mem.Allocator) !void {
 
         var result = os.waitpid(cpid, 0); // i'm not sure how to handle WaitPidResult.status with zig, there's no macro like WIFEXITED
         _ = result.status;
+
+        log.debug("parent exited\n", .{});
     }
 }
 
@@ -237,7 +260,6 @@ pub fn main() anyerror!void {
     var args = try parser.parseProcess();
     defer args.deinit();
 
-    log.debug("args: {s}\n", .{args});
     log.debug("matchedSubcommand: {s}\n", .{args.subcommand});
 
     if (args.isPresent("help")) {
