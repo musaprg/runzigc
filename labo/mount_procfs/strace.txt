@@ -1,0 +1,183 @@
+6519  execve("/usr/bin/unshare", ["unshare", "--pid", "--fork", "--mount-proc", "/bin/sh"], 0x7fffe76cdc48 /* 16 vars */) = 0
+6519  brk(NULL)                         = 0x564e4e4c8000
+6519  arch_prctl(0x3001 /* ARCH_??? */, 0x7ffd0be32ea0) = -1 EINVAL (Invalid argument)
+6519  access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+6519  openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=46365, ...}) = 0
+6519  mmap(NULL, 46365, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99b0000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+6519  read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300A\2\0\0\0\0\0"..., 832) = 832
+6519  pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+6519  pread64(3, "\4\0\0\0\20\0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0", 32, 848) = 32
+6519  pread64(3, "\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\30x\346\264ur\f|Q\226\236i\253-'o"..., 68, 880) = 68
+6519  fstat(3, {st_mode=S_IFREG|0755, st_size=2029592, ...}) = 0
+6519  mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f20d99ae000
+6519  pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+6519  pread64(3, "\4\0\0\0\20\0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0", 32, 848) = 32
+6519  pread64(3, "\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\30x\346\264ur\f|Q\226\236i\253-'o"..., 68, 880) = 68
+6519  mmap(NULL, 2037344, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f20d97bc000
+6519  mmap(0x7f20d97de000, 1540096, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x7f20d97de000
+6519  mmap(0x7f20d9956000, 319488, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x19a000) = 0x7f20d9956000
+6519  mmap(0x7f20d99a4000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1e7000) = 0x7f20d99a4000
+6519  mmap(0x7f20d99aa000, 13920, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7f20d99aa000
+6519  close(3)                          = 0
+6519  arch_prctl(ARCH_SET_FS, 0x7f20d99af580) = 0
+6519  mprotect(0x7f20d99a4000, 16384, PROT_READ) = 0
+6519  mprotect(0x564e4def6000, 4096, PROT_READ) = 0
+6519  mprotect(0x7f20d99e9000, 4096, PROT_READ) = 0
+6519  munmap(0x7f20d99b0000, 46365)     = 0
+6519  geteuid()                         = 0
+6519  getegid()                         = 0
+6519  brk(NULL)                         = 0x564e4e4c8000
+6519  brk(0x564e4e4e9000)               = 0x564e4e4e9000
+6519  openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=3035952, ...}) = 0
+6519  mmap(NULL, 3035952, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d94d6000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/share/locale/locale.alias", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=2996, ...}) = 0
+6519  read(3, "# Locale name alias data base.\n#"..., 4096) = 2996
+6519  read(3, "", 4096)                 = 0
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_IDENTIFICATION", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=252, ...}) = 0
+6519  mmap(NULL, 252, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99e8000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache", O_RDONLY) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=27002, ...}) = 0
+6519  mmap(NULL, 27002, PROT_READ, MAP_SHARED, 3, 0) = 0x7f20d99b5000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_MEASUREMENT", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=23, ...}) = 0
+6519  mmap(NULL, 23, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99b4000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_TELEPHONE", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=47, ...}) = 0
+6519  mmap(NULL, 47, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99b3000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_ADDRESS", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=131, ...}) = 0
+6519  mmap(NULL, 131, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99b2000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_NAME", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=62, ...}) = 0
+6519  mmap(NULL, 62, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99b1000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_PAPER", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=34, ...}) = 0
+6519  mmap(NULL, 34, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d99b0000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_MESSAGES", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_MESSAGES/SYS_LC_MESSAGES", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=48, ...}) = 0
+6519  mmap(NULL, 48, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d94d5000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_MONETARY", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=270, ...}) = 0
+6519  mmap(NULL, 270, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d94d4000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_COLLATE", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=1518110, ...}) = 0
+6519  mmap(NULL, 1518110, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d9361000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_TIME", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=3360, ...}) = 0
+6519  mmap(NULL, 3360, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d9360000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_NUMERIC", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=50, ...}) = 0
+6519  mmap(NULL, 50, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d935f000
+6519  close(3)                          = 0
+6519  openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_CTYPE", O_RDONLY|O_CLOEXEC) = 3
+6519  fstat(3, {st_mode=S_IFREG|0644, st_size=201272, ...}) = 0
+6519  mmap(NULL, 201272, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f20d932d000
+6519  close(3)                          = 0
+6519  unshare(CLONE_NEWNS|CLONE_NEWPID) = 0
+6519  clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, child_tidptr=0x7f20d99af850) = 6520
+6520  mount("none", "/", NULL, MS_REC|MS_PRIVATE, NULL <unfinished ...>
+6519  wait4(6520,  <unfinished ...>
+6520  <... mount resumed>)              = 0
+6520  mount("none", "/proc", NULL, MS_REC|MS_PRIVATE, NULL) = 0
+6520  mount("proc", "/proc", "proc", MS_NOSUID|MS_NODEV|MS_NOEXEC, NULL) = 0
+6520  execve("/bin/sh", ["/bin/sh"], 0x7ffd0be32fa8 /* 16 vars */) = 0
+6520  brk(NULL)                         = 0x558387f0c000
+6520  arch_prctl(0x3001 /* ARCH_??? */, 0x7ffecbf4c8d0) = -1 EINVAL (Invalid argument)
+6520  access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+6520  openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+6520  fstat(3, {st_mode=S_IFREG|0644, st_size=46365, ...}) = 0
+6520  mmap(NULL, 46365, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fe8cab69000
+6520  close(3)                          = 0
+6520  openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+6520  read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300A\2\0\0\0\0\0"..., 832) = 832
+6520  pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+6520  pread64(3, "\4\0\0\0\20\0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0", 32, 848) = 32
+6520  pread64(3, "\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\30x\346\264ur\f|Q\226\236i\253-'o"..., 68, 880) = 68
+6520  fstat(3, {st_mode=S_IFREG|0755, st_size=2029592, ...}) = 0
+6520  mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fe8cab67000
+6520  pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+6520  pread64(3, "\4\0\0\0\20\0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0", 32, 848) = 32
+6520  pread64(3, "\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\30x\346\264ur\f|Q\226\236i\253-'o"..., 68, 880) = 68
+6520  mmap(NULL, 2037344, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fe8ca975000
+6520  mmap(0x7fe8ca997000, 1540096, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x7fe8ca997000
+6520  mmap(0x7fe8cab0f000, 319488, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x19a000) = 0x7fe8cab0f000
+6520  mmap(0x7fe8cab5d000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1e7000) = 0x7fe8cab5d000
+6520  mmap(0x7fe8cab63000, 13920, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fe8cab63000
+6520  close(3)                          = 0
+6520  arch_prctl(ARCH_SET_FS, 0x7fe8cab68580) = 0
+6520  mprotect(0x7fe8cab5d000, 16384, PROT_READ) = 0
+6520  mprotect(0x55838686d000, 8192, PROT_READ) = 0
+6520  mprotect(0x7fe8caba2000, 4096, PROT_READ) = 0
+6520  munmap(0x7fe8cab69000, 46365)     = 0
+6520  getuid()                          = 0
+6520  getgid()                          = 0
+6520  getpid()                          = 1
+6520  rt_sigaction(SIGCHLD, {sa_handler=0x558386862c30, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  geteuid()                         = 0
+6520  brk(NULL)                         = 0x558387f0c000
+6520  brk(0x558387f2d000)               = 0x558387f2d000
+6520  getppid()                         = 0
+6520  stat("/home/mssn/workspace/personal/runzigc", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+6520  stat(".", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+6520  ioctl(0, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+6520  ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+6520  geteuid()                         = 0
+6520  getegid()                         = 0
+6520  rt_sigaction(SIGINT, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+6520  rt_sigaction(SIGINT, {sa_handler=0x558386862c30, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  rt_sigaction(SIGQUIT, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+6520  rt_sigaction(SIGQUIT, {sa_handler=SIG_IGN, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  rt_sigaction(SIGTERM, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+6520  rt_sigaction(SIGTERM, {sa_handler=SIG_IGN, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  openat(AT_FDCWD, "/dev/tty", O_RDWR) = 3
+6520  fcntl(3, F_DUPFD, 10)             = 10
+6520  close(3)                          = 0
+6520  fcntl(10, F_SETFD, FD_CLOEXEC)    = 0
+6520  ioctl(10, TIOCGPGRP, [0])         = 0
+6520  getpgrp()                         = 0
+6520  rt_sigaction(SIGTSTP, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+6520  rt_sigaction(SIGTSTP, {sa_handler=SIG_IGN, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  rt_sigaction(SIGTTOU, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+6520  rt_sigaction(SIGTTOU, {sa_handler=SIG_IGN, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  rt_sigaction(SIGTTIN, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+6520  rt_sigaction(SIGTTIN, {sa_handler=SIG_DFL, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x7fe8ca9b8090}, NULL, 8) = 0
+6520  setpgid(0, 1)                     = 0
+6520  ioctl(10, TIOCSPGRP, [1])         = 0
+6520  wait4(-1, 0x7ffecbf4c57c, WNOHANG|WSTOPPED, NULL) = -1 ECHILD (No child processes)
+6520  stat("/var/mail/root", 0x7ffecbf4c650) = -1 ENOENT (No such file or directory)
+6520  write(2, "# ", 2)                 = 2
+6520  read(0, "exit\n", 8192)           = 5
+6520  ioctl(10, TIOCSPGRP, [0])         = -1 ESRCH (No such process)
+6520  write(2, "/bin/sh: 1: ", 12)      = 12
+6520  write(2, "Cannot set tty process group (No"..., 46) = 46
+6520  write(2, "\n", 1)                 = 1
+6520  exit_group(0)                     = ?
+6520  +++ exited with 0 +++
+6519  <... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 6520
+6519  --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=6520, si_uid=0, si_status=0, si_utime=0, si_stime=1} ---
+6519  close(1)                          = 0
+6519  close(2)                          = 0
+6519  exit_group(0)                     = ?
+6519  +++ exited with 0 +++
