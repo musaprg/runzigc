@@ -205,8 +205,8 @@ fn run(allocator: mem.Allocator) !void {
         var gid_map_path = try fs.path.join(allocator, &[_][]const u8{ "/proc", string_pid, "gid_map" });
         defer allocator.free(gid_map_path);
 
-        log.debug("uid_map_path: {s}\n", .{uid_map_path});
-        log.debug("gid_map_path: {s}\n", .{gid_map_path});
+        log.debug("PARENT: uid_map_path: {s}\n", .{uid_map_path});
+        log.debug("PARENT: gid_map_path: {s}\n", .{gid_map_path});
 
         var uid_map = try fs.openFileAbsolute(uid_map_path, .{ .read = true, .write = true });
         defer uid_map.close();
