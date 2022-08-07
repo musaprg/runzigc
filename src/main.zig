@@ -153,18 +153,31 @@ fn run(allocator: mem.Allocator) !void {
             return error.Unexpected;
         }
 
-        const child_args = [_:null]?[*:0]const u8{ "/proc/self/exe", "init", null };
-        const envp = [_:null]?[*:0]const u8{null};
-        return os.execveZ("/proc/self/exe", &child_args, &envp);
+        var gcpid = os.fork() catch {
+            log.debug("child: fork failed\n", .{});
+            os.exit(1);
+        };
+
+        if (gcpid == 0) { // grandchild
+            log.debug("grandchild\n", .{});
+            const child_args = [_:null]?[*:0]const u8{ "/proc/self/exe", "init", null };
+            const envp = [_:null]?[*:0]const u8{null};
+            return os.execveZ("/proc/self/exe", &child_args, &envp);
+        } else { // child
+            log.debug("child: waiting for grandchild\n", .{});
+            var result = os.waitpid(gcpid, 0); // i'm not sure how to handle WaitPidResult.status with zig, there's no macro like WIFEXITED
+            _ = result.status;
+            os.exit(0);
+        }
     } else { // parent
         var syncfd = syncsocket[1];
 
-        log.debug("parent pid: {}\n", .{linux.getpid()});
-        log.debug("child pid: {}\n", .{cpid});
+        log.debug("parent: parent pid: {}\n", .{linux.getpid()});
+        log.debug("parent: child pid: {}\n", .{cpid});
 
         var buf: [1]u8 = undefined;
         if (os.read(syncfd, &buf)) |size| {
-            log.debug("read {} bytes from child\n", .{size});
+            log.debug("parent: read {} bytes\n", .{size});
             if (size != 1) {
                 return error.Unexpected;
             }
@@ -172,7 +185,7 @@ fn run(allocator: mem.Allocator) !void {
             return err;
         }
         switch (@intToEnum(sync_t, @intCast(c_int, buf[0]))) {
-            .SYNC_USERMAP_PLS => {},
+            .SYNC_USERMAP_PLS => log.debug("parent: received SYNC_USERMAP_PLS from child\n", .{}),
             else => unreachable,
         }
 
@@ -207,8 +220,9 @@ fn run(allocator: mem.Allocator) !void {
         try gid_map.writer().writeAll(gid_map_contents);
 
         var synctag: []const u8 = &[_]u8{@intCast(u8, @enumToInt(sync_t.SYNC_USERMAP_ACK))};
+        log.debug("parent: sending SYNC_USERMAP_ACK to child\n", .{});
         if (os.write(syncfd, synctag)) |size| {
-            log.debug("wrote {} bytes to child\n", .{size});
+            log.debug("parent: wrote {} bytes\n", .{size});
             if (size != 1) {
                 return error.Unexpected;
             }
@@ -216,6 +230,7 @@ fn run(allocator: mem.Allocator) !void {
             return err;
         }
 
+        log.debug("parent: wait for child\n", .{});
         var result = os.waitpid(cpid, 0); // i'm not sure how to handle WaitPidResult.status with zig, there's no macro like WIFEXITED
         _ = result.status;
 
@@ -259,8 +274,6 @@ pub fn main() anyerror!void {
 
     var args = try parser.parseProcess();
     defer args.deinit();
-
-    log.debug("matchedSubcommand: {s}\n", .{args.subcommand});
 
     if (args.isPresent("help")) {
         debug.print("{s}\n", .{help_message});
