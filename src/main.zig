@@ -76,6 +76,8 @@ fn sethostname(hostname: []const u8) SetHostNameError!void {
 fn init(allocator: mem.Allocator) !void {
     _ = allocator;
 
+    var status: usize = undefined;
+
     const hostname = "test";
     sethostname(hostname) catch |err| {
         log.debug("sethostname failed\n", .{});
@@ -85,7 +87,33 @@ fn init(allocator: mem.Allocator) !void {
     log.debug("GRANDCHILD: current uid: {}\n", .{linux.getuid()});
     log.debug("GRANDCHILD: current gid: {}\n", .{linux.getgid()});
 
-    var status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
+    os.mkdir("/sys/fs/cgroup/cpu/my-container", 0700) catch |err| {
+        switch (err) {
+            error.PathAlreadyExists => {},
+            else => {
+                log.debug("mkdir failed: {}\n", .{err});
+                return err;
+            },
+        }
+    };
+
+    const cgroup_cpu = try fs.openFileAbsolute("/sys/fs/cgroup/cpu/my-container/tasks", .{ .write = true });
+    defer cgroup_cpu.close();
+
+    const cgroup_cpu_content = try fmt.allocPrint(allocator, "{}\n", .{linux.getpid()});
+    defer allocator.free(cgroup_cpu_content);
+
+    try cgroup_cpu.writer().writeAll(cgroup_cpu_content);
+
+    const cgroup_cpu_quota = try fs.openFileAbsolute("/sys/fs/cgroup/cpu/my-container/cpu.cfs_quota_us", .{ .write = true });
+    defer cgroup_cpu_quota.close();
+
+    const cgroup_cpu_quota_content = try fmt.allocPrint(allocator, "{}\n", .{1000});
+    defer allocator.free(cgroup_cpu_quota_content);
+
+    try cgroup_cpu_quota.writer().writeAll(cgroup_cpu_quota_content);
+
+    status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
     switch (os.errno(status)) {
         .SUCCESS => {},
         .ACCES => return error.AccessDenied,
