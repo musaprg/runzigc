@@ -85,7 +85,7 @@ fn init(allocator: mem.Allocator) !void {
     log.debug("GRANDCHILD: current uid: {}\n", .{linux.getuid()});
     log.debug("GRANDCHILD: current gid: {}\n", .{linux.getgid()});
 
-    status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
+    var status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
     switch (os.errno(status)) {
         .SUCCESS => {},
         .ACCES => return error.AccessDenied,
@@ -272,6 +272,8 @@ fn run(allocator: mem.Allocator) !void {
         //const uid = 1000;
         var gid = linux.getgid();
         //const gid = 1000;
+
+        log.debug("PARENT: uid: {}, gid: {}\n", .{ uid, gid });
 
         var string_pid = try fmt.allocPrint(allocator, "{}", .{cpid});
         defer allocator.free(string_pid);
