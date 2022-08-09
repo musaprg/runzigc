@@ -120,7 +120,10 @@ fn init(allocator: mem.Allocator) !void {
         },
     }
 
-    status = linux.mount("rootfs", "/root/rootfs", "", @enumToInt(MountFlags.MS_BIND) | @enumToInt(MountFlags.MS_REC), @ptrToInt(""));
+    log.debug("GRANDCHILD: current uid: {}\n", .{linux.getuid()});
+    log.debug("GRANDCHILD: current gid: {}\n", .{linux.getgid()});
+
+    status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
     switch (os.errno(status)) {
         .SUCCESS => {},
         .ACCES => return error.AccessDenied,
@@ -131,7 +134,18 @@ fn init(allocator: mem.Allocator) !void {
         },
     }
 
-    status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
+    status = linux.chdir("/root");
+    switch (os.errno(status)) {
+        .SUCCESS => {},
+        .ACCES => return error.AccessDenied,
+        .PERM => return error.PermissionDenied,
+        else => |err| {
+            // TODO(musaprg): define error type
+            return os.unexpectedErrno(err);
+        },
+    }
+
+    status = linux.mount("rootfs", "/root/rootfs", "", @enumToInt(MountFlags.MS_BIND) | @enumToInt(MountFlags.MS_REC), @ptrToInt(""));
     switch (os.errno(status)) {
         .SUCCESS => {},
         .ACCES => return error.AccessDenied,
@@ -168,6 +182,17 @@ fn init(allocator: mem.Allocator) !void {
         log.debug("deleteDirAbsolute failed\n", .{});
         return err;
     };
+
+    status = linux.chdir("/");
+    switch (os.errno(status)) {
+        .SUCCESS => {},
+        .ACCES => return error.AccessDenied,
+        .PERM => return error.OperationNotPermitted,
+        else => |err| {
+            // TODO(musaprg): define error type
+            return os.unexpectedErrno(err);
+        },
+    }
 
     const child_args = [_:null]?[*:0]const u8{ "/bin/sh", null };
     const envp = [_:null]?[*:0]const u8{null};

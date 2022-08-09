@@ -2,23 +2,18 @@
 
 set -eu
 
-ROOTNAME=rootfs
+mkdir -m 755 -p /root/rootfs/proc
+mkdir -m 755 -p /root/rootfs/bin
+mkdir -m 755 -p /root/rootfs/lib
 
-mkdir -p /root/${ROOTNAME}/proc
-mkdir -p /root/${ROOTNAME}/bin
-mkdir -p /root/${ROOTNAME}/lib
+cp -Lr /bin/sh /root/rootfs/bin
+cp -Lr /bin/ls /root/rootfs/bin
 
-cp /bin/sh /root/${ROOTNAME}/bin
-cp /bin/ls /root/${ROOTNAME}/bin
+ldd /bin/sh
+ldd /bin/ls
 
-cp /lib/x86_64-linux-gnu/libc.so.6 /root/${ROOTNAME}/lib
-cp /lib64/ld-linux-x86-64.so.2 /root/${ROOTNAME}/lib
-cp /lib/x86_64-linux-gnu/libselinux.so.1 /root/${ROOTNAME}/lib
-cp /lib/x86_64-linux-gnu/libpcre.so.3 /root/${ROOTNAME}/lib
-cp /lib/x86_64-linux-gnu/libdl.so.2 /root/${ROOTNAME}/lib
-cp /lib/x86_64-linux-gnu/libpthread.so.0 /root/${ROOTNAME}/lib
+cp -Lr /lib/x86_64-linux-gnu /root/rootfs/lib
+cp -Lr /lib64/ld-linux-x86-64.so.2 /root/rootfs/lib
 
-cd /root/${ROOTNAME}/
+cd /root/rootfs/
 ln -s lib lib64
-
-cd
