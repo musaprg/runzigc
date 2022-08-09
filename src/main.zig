@@ -193,9 +193,9 @@ fn run(allocator: mem.Allocator) !void {
 
         // https://man7.org/linux/man-pages/man7/user_namespaces.7.html#:~:text=User%20and%20group%20ID%20mappings%3A%20uid_map%20and%20gid_map
         // uid_map and gid_map are only writable from parent process.
-        var uid = linux.getpid();
+        var uid = linux.getuid();
         //const uid = 1000;
-        var gid = linux.getpid();
+        var gid = linux.getgid();
         //const gid = 1000;
 
         var string_pid = try fmt.allocPrint(allocator, "{}", .{cpid});
