@@ -23,11 +23,3 @@ zig build
 ```
 zig build -Drelease-safe
 ```
-
-## Run
-
-Before run, execute commands.
-
-```
-sudo ./prepare.sh
-```

@@ -21,44 +21,25 @@ const sync_t = enum(c_int) {
     SYNC_USERMAP_ACK = 0x41,
 };
 
-const MountFlags = enum(u32) {
-    MS_NOSUID = 0x2,
+const sys_mountflags_t = enum(u32) {
+    MS_DIRSYNC = 0x80,
+    MS_MANDLOCK = 0x40,
+    MS_MOVE = 0x2000,
+    MS_NOATIME = 0x400,
     MS_NODEV = 0x4,
+    MS_NODIRATIME = 0x800,
     MS_NOEXEC = 0x8,
-    MS_BIND = 0x1000,
+    MS_NOSUID = 0x2,
+    MS_RDONLY = 0x1,
     MS_REC = 0x4000,
+    MS_REMOUNT = 0x20,
+    MS_SILENT = 0x8000,
+    MS_STRICTATIME = 0x1000,
+    MS_SYNCHRONOUS = 0x10,
     MS_PRIVATE = 0x40000,
-    MS_SLAVE = 0x80000,
 };
 
-const UmountFlags = enum(u32) {
-    MNT_FORCE = 0x1,
-    MNT_DETACH = 0x2,
-    MNT_EXPIRE = 0x4,
-};
-
-pub const PivotRootError = error{
-    Busy,
-    Invalid,
-    OperationNotPermitted,
-    NotDir,
-} || os.UnexpectedError;
-
-fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void {
-    const result = switch (native_arch) {
-        else => linux.syscall2(.pivot_root, @ptrToInt(new_root.ptr), @ptrToInt(put_old.ptr)),
-    };
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        .PERM => error.OperationNotPermitted,
-        .BUSY => error.Busy,
-        .NOTDIR => error.NotDir,
-        .INVAL => error.Invalid,
-        else => |err| return os.unexpectedErrno(err),
-    };
-}
-
-pub const SetHostNameError = error{OperationNotPermitted} || os.UnexpectedError;
+pub const SetHostNameError = error{PermissionDenied} || os.UnexpectedError;
 
 // TODO(musaprg): dirty hack, fix it
 fn sethostname(hostname: []const u8) SetHostNameError!void {
@@ -67,7 +48,7 @@ fn sethostname(hostname: []const u8) SetHostNameError!void {
     };
     return switch (os.errno(result)) {
         .SUCCESS => {},
-        .PERM => error.OperationNotPermitted,
+        .PERM => error.PermissionDenied,
         else => |err| return os.unexpectedErrno(err),
     };
 }
@@ -83,10 +64,20 @@ fn init(allocator: mem.Allocator) !void {
     };
 
     // TODO(musaprg): figure out why this needs to be called before mount procfs
-    var status = linux.mount("none", "/proc", "", @enumToInt(MountFlags.MS_REC) | @enumToInt(MountFlags.MS_PRIVATE), @ptrToInt(""));
+    var status = linux.mount("none", "/", "", @enumToInt(sys_mountflags_t.MS_REC) | @enumToInt(sys_mountflags_t.MS_PRIVATE), @ptrToInt(""));
     switch (os.errno(status)) {
         .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
+        .PERM => return error.PermissionDenied,
+        else => |err| {
+            // TODO(musaprg): define error type
+            return os.unexpectedErrno(err);
+        },
+    }
+
+    // TODO(musaprg): figure out why this needs to be called before mount procfs
+    status = linux.mount("none", "/proc", "", @enumToInt(sys_mountflags_t.MS_REC) | @enumToInt(sys_mountflags_t.MS_PRIVATE), @ptrToInt(""));
+    switch (os.errno(status)) {
+        .SUCCESS => {},
         .PERM => return error.PermissionDenied,
         else => |err| {
             // TODO(musaprg): define error type
@@ -95,99 +86,10 @@ fn init(allocator: mem.Allocator) !void {
     }
 
     // TODO(musaprg): refactor this line
-    status = linux.mount("proc", "/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
+    status = linux.mount("proc", "/proc", "proc", @enumToInt(sys_mountflags_t.MS_NOEXEC) | @enumToInt(sys_mountflags_t.MS_NOSUID) | @enumToInt(sys_mountflags_t.MS_NODEV), @ptrToInt(""));
     switch (os.errno(status)) {
         .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
-
-    // this mount root with rslave bind mode. if you want to root propagation, set MountFlags.MS_PRIVATE instead.
-    // ref: https://github.com/opencontainers/runc/blob/214c16fd9a3bd9fe56a2476933e31749a7c0576b/libcontainer/rootfs_linux.go#L772-L789
-    status = linux.mount("none", "/", "", @enumToInt(MountFlags.MS_REC) | @enumToInt(MountFlags.MS_SLAVE), @ptrToInt(""));
-    //status = linux.mount("none", "/", "", @enumToInt(MountFlags.MS_REC) | @enumToInt(MountFlags.MS_SLAVE), @ptrToInt(""));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
         .PERM => return error.PermissionDenied,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
-
-    log.debug("GRANDCHILD: current uid: {}\n", .{linux.getuid()});
-    log.debug("GRANDCHILD: current gid: {}\n", .{linux.getgid()});
-
-    status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
-
-    status = linux.chdir("/root");
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.PermissionDenied,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
-
-    status = linux.mount("rootfs", "/root/rootfs", "", @enumToInt(MountFlags.MS_BIND) | @enumToInt(MountFlags.MS_REC), @ptrToInt(""));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
-
-    fs.makeDirAbsolute("/root/rootfs/oldrootfs") catch |err| {
-        log.debug("makeDirAbsolute failed\n", .{});
-        return err;
-    };
-
-    // TODO(musaprg): fix here, currently we need to create /root/pivotroot/proc before executing this
-    pivot_root("rootfs", "/root/rootfs/oldrootfs") catch |err| {
-        log.debug("pivot_root failed\n", .{});
-        return err;
-    };
-
-    status = linux.umount2("/oldrootfs", @enumToInt(UmountFlags.MNT_DETACH));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
-
-    fs.deleteDirAbsolute("/oldrootfs") catch |err| {
-        log.debug("deleteDirAbsolute failed\n", .{});
-        return err;
-    };
-
-    status = linux.chdir("/");
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
         else => |err| {
             // TODO(musaprg): define error type
             return os.unexpectedErrno(err);
