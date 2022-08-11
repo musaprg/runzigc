@@ -9,6 +9,8 @@ const linux = os.linux;
 const log = std.log;
 const debug = std.debug;
 
+const syscall = @import("syscall.zig");
+
 const Command = zig_arg.Command;
 const flag = zig_arg.flag;
 
@@ -21,57 +23,6 @@ const sync_t = enum(c_int) {
     SYNC_USERMAP_ACK = 0x41,
 };
 
-const MountFlags = enum(u32) {
-    MS_NOSUID = 0x2,
-    MS_NODEV = 0x4,
-    MS_NOEXEC = 0x8,
-    MS_BIND = 0x1000,
-    MS_REC = 0x4000,
-    MS_PRIVATE = 0x40000,
-    MS_SLAVE = 0x80000,
-};
-
-const UmountFlags = enum(u32) {
-    MNT_FORCE = 0x1,
-    MNT_DETACH = 0x2,
-    MNT_EXPIRE = 0x4,
-};
-
-pub const PivotRootError = error{
-    Busy,
-    Invalid,
-    OperationNotPermitted,
-    NotDir,
-} || os.UnexpectedError;
-
-fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void {
-    const result = switch (native_arch) {
-        else => linux.syscall2(.pivot_root, @ptrToInt(new_root.ptr), @ptrToInt(put_old.ptr)),
-    };
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        .PERM => error.OperationNotPermitted,
-        .BUSY => error.Busy,
-        .NOTDIR => error.NotDir,
-        .INVAL => error.Invalid,
-        else => |err| return os.unexpectedErrno(err),
-    };
-}
-
-pub const SetHostNameError = error{OperationNotPermitted} || os.UnexpectedError;
-
-// TODO(musaprg): dirty hack, fix it
-fn sethostname(hostname: []const u8) SetHostNameError!void {
-    const result = switch (native_arch) {
-        else => linux.syscall2(.sethostname, @ptrToInt(hostname.ptr), hostname.len),
-    };
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        .PERM => error.OperationNotPermitted,
-        else => |err| return os.unexpectedErrno(err),
-    };
-}
-
 // set hostname and exec passed command
 fn init(allocator: mem.Allocator) !void {
     _ = allocator;
@@ -79,7 +30,7 @@ fn init(allocator: mem.Allocator) !void {
     var status: usize = undefined;
 
     const hostname = "test";
-    sethostname(hostname) catch |err| {
+    syscall.sethostname(hostname) catch |err| {
         log.debug("sethostname failed\n", .{});
         return err;
     };
@@ -113,19 +64,7 @@ fn init(allocator: mem.Allocator) !void {
 
     try cgroup_cpu_quota.writer().writeAll(cgroup_cpu_quota_content);
 
-    status = linux.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(MountFlags.MS_NOEXEC) | @enumToInt(MountFlags.MS_NOSUID) | @enumToInt(MountFlags.MS_NODEV), @ptrToInt(""));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        .BUSY => return error.Busy,
-        .NOTDIR => return error.NotDir,
-        .INVAL => return error.Invalid,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
+    try syscall.mount("proc", "/root/rootfs/proc", "proc", @enumToInt(syscall.MountFlags.MS_NOEXEC) | @enumToInt(syscall.MountFlags.MS_NOSUID) | @enumToInt(syscall.MountFlags.MS_NODEV), @ptrToInt(""));
 
     status = linux.chdir("/root");
     switch (os.errno(status)) {
@@ -141,19 +80,7 @@ fn init(allocator: mem.Allocator) !void {
         },
     }
 
-    status = linux.mount("rootfs", "/root/rootfs", "", @enumToInt(MountFlags.MS_BIND) | @enumToInt(MountFlags.MS_REC), @ptrToInt(""));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        .BUSY => return error.Busy,
-        .NOTDIR => return error.NotDir,
-        .INVAL => return error.Invalid,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
+    try syscall.mount("rootfs", "/root/rootfs", "", @enumToInt(syscall.MountFlags.MS_BIND) | @enumToInt(syscall.MountFlags.MS_REC), @ptrToInt(""));
 
     fs.makeDirAbsolute("/root/rootfs/oldrootfs") catch |err| {
         log.debug("makeDirAbsolute failed\n", .{});
@@ -161,24 +88,12 @@ fn init(allocator: mem.Allocator) !void {
     };
 
     // TODO(musaprg): fix here, currently we need to create /root/pivotroot/proc before executing this
-    pivot_root("rootfs", "/root/rootfs/oldrootfs") catch |err| {
+    syscall.pivot_root("rootfs", "/root/rootfs/oldrootfs") catch |err| {
         log.debug("pivot_root failed\n", .{});
         return err;
     };
 
-    status = linux.umount2("/oldrootfs", @enumToInt(UmountFlags.MNT_DETACH));
-    switch (os.errno(status)) {
-        .SUCCESS => {},
-        .ACCES => return error.AccessDenied,
-        .PERM => return error.OperationNotPermitted,
-        .BUSY => return error.Busy,
-        .NOTDIR => return error.NotDir,
-        .INVAL => return error.Invalid,
-        else => |err| {
-            // TODO(musaprg): define error type
-            return os.unexpectedErrno(err);
-        },
-    }
+    try syscall.umount("/oldrootfs", @enumToInt(syscall.UmountFlags.MNT_DETACH));
 
     fs.deleteDirAbsolute("/oldrootfs") catch |err| {
         log.debug("deleteDirAbsolute failed\n", .{});
