@@ -57,7 +57,7 @@ pub const PivotRootError = error{
     NotDir,
 } || os.UnexpectedError;
 
-fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void {
+pub fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void {
     const result = switch (native_arch) {
         else => linux.syscall2(.pivot_root, @ptrToInt(new_root.ptr), @ptrToInt(put_old.ptr)),
     };
@@ -74,7 +74,7 @@ fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void {
 pub const SetHostNameError = error{OperationNotPermitted} || os.UnexpectedError;
 
 // TODO(musaprg): dirty hack, fix it
-fn sethostname(hostname: []const u8) SetHostNameError!void {
+pub fn sethostname(hostname: []const u8) SetHostNameError!void {
     const result = switch (native_arch) {
         else => linux.syscall2(.sethostname, @ptrToInt(hostname.ptr), hostname.len),
     };
