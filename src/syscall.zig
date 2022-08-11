@@ -30,20 +30,21 @@ pub const UmountFlags = enum(u32) {
 
 pub const UmountError = error{} || os.UnexpectedError;
 
-pub fn mount(special: [*:0]const u8, dir: [*:0]const u8, fstype: [*:0]const u8, flags: u32, data: usize) MountError!usize {
+pub fn mount(special: [*:0]const u8, dir: [*:0]const u8, fstype: [*:0]const u8, flags: u32, data: usize) MountError!void {
     const result = linux.syscall5(.mount, @ptrToInt(special), @ptrToInt(dir), @ptrToInt(fstype), flags, data);
-    return switch (os.errno(result)) {
+    switch (os.errno(result)) {
         .SUCCESS => {},
         else => |err| return os.unexpectedErrno(err),
-    };
+    }
 }
 
-pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!usize {
-    const result = if (flags) |unwrapped_flags| {
-        return linux.syscall2(.umount2, @ptrToInt(special), unwrapped_flags);
+pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!void {
+    var result: usize = undefined;
+    if (flags) |unwrapped_flags| {
+        result = linux.syscall2(.umount2, @ptrToInt(special), unwrapped_flags);
     } else {
-        return linux.syscall2(.umount2, @ptrToInt(special), 0);
-    };
+        result = linux.syscall2(.umount2, @ptrToInt(special), 0);
+    }
     return switch (os.errno(result)) {
         .SUCCESS => {},
         else => |err| return os.unexpectedErrno(err),
