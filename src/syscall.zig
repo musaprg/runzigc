@@ -10,6 +10,49 @@ const log = std.log;
 const debug = std.debug;
 const native_arch = builtin.cpu.arch;
 
+pub const LinuxKernelErrorBase = error{ OperationNotPermitted, NoSuchFileOrDirectory, NoSuchProcess, InterruptedSystemCall, IOError, NoSuchDeviceOrAddress, ArgumentListTooLong, ExecFormatError, BadFileNumber, NoChildProcesses, TryAgain, OutOfMemory, PermissionDenied, BadAddress, BlockDeviceRequired, DeviceOrResourceBusy, FileExists, CrossDeviceLink, NoSuchDevice, NotADirectory, IsADirectory, InvalidArgument, FileTableOverflow, TooManyOpenFiles, NotATypewriter, TextFileBusy, FileTooLarge, NoSpaceLeftOnDevice, IllegalSeek, ReadOnlyFileSystem, TooManyLinks, BrokenPipe, MathArgumentOutOfDomainOfFunc, MathResultNotRepresentable };
+pub const LinuxKernelError = LinuxKernelErrorBase || os.UnexpectedError;
+
+pub fn errno(err: usize) LinuxKernelError!void {
+    return switch (os.errno(err)) {
+        .SUCCESS => {},
+        .PERM => error.OperationNotPermitted,
+        .NOENT => error.NoSuchFileOrDirectory,
+        .SRCH => error.NoSuchProcess,
+        .INTR => error.InterruptedSystemCall,
+        .IO => error.IOError,
+        .NXIO => error.NoSuchDeviceOrAddress,
+        .@"2BIG" => error.ArgumentListTooLong,
+        .NOEXEC => error.ExecFormatError,
+        .BADF => error.BadFileNumber,
+        .CHILD => error.NoChildProcesses,
+        .AGAIN => error.TryAgain,
+        .NOMEM => error.OutOfMemory,
+        .ACCES => error.PermissionDenied,
+        .FAULT => error.BadAddress,
+        .BUSY => error.DeviceOrResourceBusy,
+        .EXIST => error.FileExists,
+        .XDEV => error.CrossDeviceLink,
+        .NODEV => error.NoSuchDevice,
+        .NOTDIR => error.NotADirectory,
+        .ISDIR => error.IsADirectory,
+        .INVAL => error.InvalidArgument,
+        .NFILE => error.FileTableOverflow,
+        .MFILE => error.TooManyOpenFiles,
+        .NOTTY => error.NotATypewriter,
+        .TXTBSY => error.TextFileBusy,
+        .FBIG => error.FileTooLarge,
+        .NOSPC => error.NoSpaceLeftOnDevice,
+        .SPIPE => error.IllegalSeek,
+        .ROFS => error.ReadOnlyFileSystem,
+        .MLINK => error.TooManyLinks,
+        .PIPE => error.BrokenPipe,
+        .DOM => error.MathArgumentOutOfDomainOfFunc,
+        .RANGE => error.MathResultNotRepresentable,
+        else => |e| return os.unexpectedErrno(e),
+    };
+}
+
 pub const MountFlags = enum(u32) {
     MS_NOSUID = 0x2,
     MS_NODEV = 0x4,
@@ -20,7 +63,7 @@ pub const MountFlags = enum(u32) {
     MS_SLAVE = 0x80000,
 };
 
-pub const MountError = error{} || os.UnexpectedError;
+pub const MountError = LinuxKernelError;
 
 pub const UmountFlags = enum(u32) {
     MNT_FORCE = 0x1,
@@ -28,14 +71,11 @@ pub const UmountFlags = enum(u32) {
     MNT_EXPIRE = 0x4,
 };
 
-pub const UmountError = error{} || os.UnexpectedError;
+pub const UmountError = LinuxKernelError;
 
 pub fn mount(special: [*:0]const u8, dir: [*:0]const u8, fstype: [*:0]const u8, flags: u32, data: usize) MountError!void {
     const result = linux.syscall5(.mount, @ptrToInt(special), @ptrToInt(dir), @ptrToInt(fstype), flags, data);
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        else => |err| return os.unexpectedErrno(err),
-    };
+    return errno(result);
 }
 
 pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!void {
@@ -45,43 +85,24 @@ pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!void {
     } else {
         result = linux.syscall2(.umount2, @ptrToInt(special), 0);
     }
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        else => |err| return os.unexpectedErrno(err),
-    };
+    return errno(result);
 }
 
-pub const PivotRootError = error{
-    Busy,
-    Invalid,
-    OperationNotPermitted,
-    NotDir,
-} || os.UnexpectedError;
+pub const PivotRootError = LinuxKernelError;
 
 pub fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void {
     const result = switch (native_arch) {
         else => linux.syscall2(.pivot_root, @ptrToInt(new_root.ptr), @ptrToInt(put_old.ptr)),
     };
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        .PERM => error.OperationNotPermitted,
-        .BUSY => error.Busy,
-        .NOTDIR => error.NotDir,
-        .INVAL => error.Invalid,
-        else => |err| return os.unexpectedErrno(err),
-    };
+    return errno(result);
 }
 
-pub const SetHostNameError = error{OperationNotPermitted} || os.UnexpectedError;
+pub const SetHostNameError = LinuxKernelError;
 
 // TODO(musaprg): dirty hack, fix it
 pub fn sethostname(hostname: []const u8) SetHostNameError!void {
     const result = switch (native_arch) {
         else => linux.syscall2(.sethostname, @ptrToInt(hostname.ptr), hostname.len),
     };
-    return switch (os.errno(result)) {
-        .SUCCESS => {},
-        .PERM => error.OperationNotPermitted,
-        else => |err| return os.unexpectedErrno(err),
-    };
+    return errno(result);
 }
