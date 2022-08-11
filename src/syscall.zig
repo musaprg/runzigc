@@ -32,10 +32,10 @@ pub const UmountError = error{} || os.UnexpectedError;
 
 pub fn mount(special: [*:0]const u8, dir: [*:0]const u8, fstype: [*:0]const u8, flags: u32, data: usize) MountError!void {
     const result = linux.syscall5(.mount, @ptrToInt(special), @ptrToInt(dir), @ptrToInt(fstype), flags, data);
-    switch (os.errno(result)) {
+    return switch (os.errno(result)) {
         .SUCCESS => {},
         else => |err| return os.unexpectedErrno(err),
-    }
+    };
 }
 
 pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!void {
