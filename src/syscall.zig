@@ -13,9 +13,9 @@ const native_arch = builtin.cpu.arch;
 pub const LinuxKernelErrorBase = error{ OperationNotPermitted, NoSuchFileOrDirectory, NoSuchProcess, InterruptedSystemCall, IOError, NoSuchDeviceOrAddress, ArgumentListTooLong, ExecFormatError, BadFileNumber, NoChildProcesses, TryAgain, OutOfMemory, PermissionDenied, BadAddress, BlockDeviceRequired, DeviceOrResourceBusy, FileExists, CrossDeviceLink, NoSuchDevice, NotADirectory, IsADirectory, InvalidArgument, FileTableOverflow, TooManyOpenFiles, NotATypewriter, TextFileBusy, FileTooLarge, NoSpaceLeftOnDevice, IllegalSeek, ReadOnlyFileSystem, TooManyLinks, BrokenPipe, MathArgumentOutOfDomainOfFunc, MathResultNotRepresentable };
 pub const LinuxKernelError = LinuxKernelErrorBase || os.UnexpectedError;
 
-pub fn errno(err: usize) LinuxKernelError!void {
-    return switch (os.errno(err)) {
-        .SUCCESS => {},
+pub fn valOrErr(comptime T: type, val: T, errno: usize) LinuxKernelError!T {
+    return switch (os.errno(errno)) {
+        .SUCCESS => val,
         .PERM => error.OperationNotPermitted,
         .NOENT => error.NoSuchFileOrDirectory,
         .SRCH => error.NoSuchProcess,
@@ -75,7 +75,7 @@ pub const UmountError = LinuxKernelError;
 
 pub fn mount(special: [*:0]const u8, dir: [*:0]const u8, fstype: [*:0]const u8, flags: u32, data: usize) MountError!void {
     const result = linux.syscall5(.mount, @ptrToInt(special), @ptrToInt(dir), @ptrToInt(fstype), flags, data);
-    return errno(result);
+    return valOrErr(void, {}, result);
 }
 
 pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!void {
@@ -85,7 +85,7 @@ pub fn umount(special: [*:0]const u8, flags: ?u32) UmountError!void {
     } else {
         result = linux.syscall2(.umount2, @ptrToInt(special), 0);
     }
-    return errno(result);
+    return valOrErr(void, {}, result);
 }
 
 pub const PivotRootError = LinuxKernelError;
@@ -94,7 +94,7 @@ pub fn pivot_root(new_root: []const u8, put_old: []const u8) PivotRootError!void
     const result = switch (native_arch) {
         else => linux.syscall2(.pivot_root, @ptrToInt(new_root.ptr), @ptrToInt(put_old.ptr)),
     };
-    return errno(result);
+    return valOrErr(void, {}, result);
 }
 
 pub const SetHostNameError = LinuxKernelError;
@@ -104,5 +104,5 @@ pub fn sethostname(hostname: []const u8) SetHostNameError!void {
     const result = switch (native_arch) {
         else => linux.syscall2(.sethostname, @ptrToInt(hostname.ptr), hostname.len),
     };
-    return errno(result);
+    return valOrErr(void, {}, result);
 }
