@@ -19,3 +19,10 @@ zig-out/
 cloud-config.yaml
 .zigmod
 deps.zig
+
+# VSCode related files
+.vscode/*
+
+# Local History for Visual Studio Code
+.history/
+
