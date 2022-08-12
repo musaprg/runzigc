@@ -5,13 +5,15 @@ set -eu
 GITROOT_DIR=$(git rev-parse --show-toplevel)
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
 CLOUDCONF_PATH=${SCRIPT_DIR}/cloud-config.yaml
+ZLS_VERSION=0.9.0
+VM_NAME="multipass"
 
 if [ ! -e ${CLOUDCONF_PATH} ]; then
     if [ ! -e ~/.ssh/multipass ]; then
         ssh-keygen -t rsa -b 4096 -C "$(uuidgen)" -f ~/.ssh/multipass
         cat >> ~/.ssh/config << _EOF_
-Host multipass.local
-    HostName multipass.local
+Host ${VM_NAME}.local
+    HostName ${VM_NAME}.local
     IdentityFile ~/.ssh/multipass
     User ubuntu
     Port 22
@@ -47,14 +49,18 @@ packages:
 
 runcmd:
  - sudo snap install --classic --beta zig
- - mkdir $HOME/zls && cd $HOME/zls && curl -L https://github.com/zigtools/zls/releases/download/0.9.0/x86_64-linux.tar.xz | tar -xJ --strip-components=1
+ - |-
+  git clone https://github.com/zigtools/zls.git && \
+  cd zls && git checkout refs/tags/${ZLS_VERSION} && \
+  git submodule update --init --recursive && \
+  zig build -Drelease-safe
 _EOF_
 fi
 
-multipass delete multipass 2>/dev/null || :
+multipass delete ${VM_NAME} 2>/dev/null || :
 multipass purge
 multipass launch \
-    --name multipass \
+    --name ${VM_NAME} \
     --cpus 2 \
     --mem 4G \
     --disk 20G \
