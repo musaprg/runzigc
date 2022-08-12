@@ -164,6 +164,11 @@ fn run(allocator: mem.Allocator) !void {
             else => unreachable,
         }
 
+        syscall.setsid() catch |err| {
+            log.debug("setresuid failed\n", .{});
+            return err;
+        };
+
         if (linux.setresuid(0, 0, 0) == -1) {
             log.debug("setresuid failed\n", .{});
             return error.Unexpected;

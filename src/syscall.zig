@@ -106,3 +106,12 @@ pub fn sethostname(hostname: []const u8) SetHostNameError!void {
     };
     return valOrErr({}, result);
 }
+
+pub const SetsidError = LinuxKernelError;
+
+pub fn setsid() SetsidError!void {
+    const result = switch (native_arch) {
+        else => linux.syscall0(.setsid),
+    };
+    return valOrErr({}, result);
+}
