@@ -146,8 +146,21 @@ pub const StatMode = enum(u32) {
 
 pub fn stat(path: []const u8) StatError!linux.Stat {
     var stat_result: linux.Stat = undefined;
-    const err = linux.syscall2(.stat, @ptrToInt(path.ptr), @ptrToInt(&stat_result));
+
+    // https://cs.opensource.google/go/go/+/refs/tags/go1.19:src/syscall/syscall_linux_amd64.go;drc=ea9c3fd42d94182ce6f87104b68a51ea92f1a571;l=58
+    const err = fstatat(linux.AT.FDCWD, path, &stat_result, linux.AT.SYMLINK_NOFOLLOW);
+
     return valOrErr(stat_result, err);
+}
+
+fn fstatat(fd: os.fd_t, path: []const u8, stat_info: *linux.Stat, flags: u32) usize {
+    // https://cs.opensource.google/go/go/+/refs/tags/go1.19:src/syscall/zsyscall_linux_arm64.go
+    return switch (native_arch) {
+        .x86_64 => linux.syscall6(.fstatat, @ptrToInt(&fd), @ptrToInt(path.ptr), @ptrToInt(stat_info), flags, 0, 0),
+        .aarch64 => linux.syscall6(.fstatat, @ptrToInt(&fd), @ptrToInt(path.ptr), @ptrToInt(stat_info), flags, 0, 0),
+        .i386, .arm => linux.syscall6(.fstatat64, @ptrToInt(&fd), @ptrToInt(path.ptr), @ptrToInt(stat_info), flags, 0, 0),
+        else => @compileError("Unsupported architecture"),
+    };
 }
 
 pub fn isDir(stat_info: linux.Stat) bool {
