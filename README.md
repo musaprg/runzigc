@@ -23,3 +23,8 @@ zig build
 ```
 zig build -Drelease-safe
 ```
+
+## Similar projects
+
+- [fancl20/zrun](https://github.com/fancl20/zrun) A fast and low-memory footprint (non-standard) container runtime fully written in Zig.
+- [containers/youki](https://github.com/containers/youki) A container runtime written in Rust
