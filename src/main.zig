@@ -10,6 +10,7 @@ const log = std.log;
 const debug = std.debug;
 
 const syscall = @import("syscall.zig");
+const util = @import("util.zig");
 
 const Command = zig_arg.Command;
 const flag = zig_arg.flag;
@@ -38,7 +39,7 @@ fn init(allocator: mem.Allocator) !void {
     log.debug("GRANDCHILD: current uid: {}\n", .{linux.getuid()});
     log.debug("GRANDCHILD: current gid: {}\n", .{linux.getgid()});
 
-    os.mkdir("/sys/fs/cgroup/cpu/my-container", 0700) catch |err| {
+    util.mkdirAll("/sys/fs/cgroup/cpu/my-container", 0700) catch |err| {
         switch (err) {
             error.PathAlreadyExists => {},
             else => {
@@ -82,7 +83,7 @@ fn init(allocator: mem.Allocator) !void {
 
     try syscall.mount("rootfs", "/root/rootfs", "", @enumToInt(syscall.MountFlags.MS_BIND) | @enumToInt(syscall.MountFlags.MS_REC), @ptrToInt(""));
 
-    fs.makeDirAbsolute("/root/rootfs/oldrootfs") catch |err| {
+    util.mkdirAll("/root/rootfs/oldrootfs", 0700) catch |err| {
         log.debug("makeDirAbsolute failed\n", .{});
         return err;
     };
