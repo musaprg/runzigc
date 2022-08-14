@@ -115,3 +115,41 @@ pub fn setsid() SetsidError!void {
     };
     return valOrErr({}, result);
 }
+
+pub const StatError = LinuxKernelError;
+
+pub const StatMode = enum(u32) {
+    S_IFMT = 0o170000,
+    S_IFSOCK = 0o140000,
+    S_IFLNK = 0o120000,
+    S_IFREG = 0o100000,
+    S_IFBLK = 0o060000,
+    S_IFDIR = 0o040000,
+    S_IFCHR = 0o020000,
+    S_IFIFO = 0o010000,
+    S_ISUID = 0o004000,
+    S_ISGID = 0o002000,
+    S_ISVTX = 0o001000,
+    S_IRWXU = 0o000700,
+    S_IRUSR = 0o000400,
+    S_IWUSR = 0o000200,
+    S_IXUSR = 0o000100,
+    S_IRWXG = 0o000070,
+    S_IRGRP = 0o000040,
+    S_IWGRP = 0o000020,
+    S_IXGRP = 0o000010,
+    S_IRWXO = 0o000007,
+    S_IROTH = 0o000004,
+    S_IWOTH = 0o000002,
+    S_IXOTH = 0o000001,
+};
+
+pub fn stat(path: []const u8) StatError!linux.Stat {
+    var stat_result: linux.Stat = undefined;
+    const err = linux.syscall2(.stat, @ptrToInt(path.ptr), @ptrToInt(&stat_result));
+    return valOrErr(stat_result, err);
+}
+
+pub fn isDir(stat_info: linux.Stat) bool {
+    return stat_info.mode & @enumToInt(StatMode.S_IFMT) == @enumToInt(StatMode.S_IFDIR);
+}
