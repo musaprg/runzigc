@@ -25,7 +25,7 @@ const sync_t = enum(c_int) {
 };
 
 // set hostname and exec passed command
-fn init(allocator: mem.Allocator) !void {
+fn init(allocator: mem.Allocator, container_id: []const u8) !void {
     _ = allocator;
 
     var status: usize = undefined;
@@ -39,7 +39,12 @@ fn init(allocator: mem.Allocator) !void {
     log.debug("GRANDCHILD: current uid: {}\n", .{linux.getuid()});
     log.debug("GRANDCHILD: current gid: {}\n", .{linux.getgid()});
 
-    util.mkdirAll("/sys/fs/cgroup/cpu/my-container", 0700) catch |err| {
+    const cgroup_cpu_path = fs.path.join(allocator, &[_][]const u8{ "/sys/fs/cgroup/cpu/runzigc", container_id }) catch |err| {
+        log.debug("failed to join cgroup path: {}\n", .{err});
+        return err;
+    };
+
+    util.mkdirAll(cgroup_cpu_path, 0700) catch |err| {
         switch (err) {
             error.PathAlreadyExists => {},
             else => {
@@ -49,7 +54,12 @@ fn init(allocator: mem.Allocator) !void {
         }
     };
 
-    const cgroup_cpu = try fs.openFileAbsolute("/sys/fs/cgroup/cpu/my-container/tasks", .{ .write = true });
+    const cgroup_cpu_tasks_path = fs.path.join(allocator, &[_][]const u8{ cgroup_cpu_path, "tasks" }) catch |err| {
+        log.debug("failed to join cgroup path: {}\n", .{err});
+        return err;
+    };
+
+    const cgroup_cpu = try fs.openFileAbsolute(cgroup_cpu_tasks_path, .{ .write = true });
     defer cgroup_cpu.close();
 
     const cgroup_cpu_content = try fmt.allocPrint(allocator, "{}\n", .{linux.getpid()});
@@ -57,7 +67,11 @@ fn init(allocator: mem.Allocator) !void {
 
     try cgroup_cpu.writer().writeAll(cgroup_cpu_content);
 
-    const cgroup_cpu_quota = try fs.openFileAbsolute("/sys/fs/cgroup/cpu/my-container/cpu.cfs_quota_us", .{ .write = true });
+    const cgroup_cpu_quota_path = fs.path.join(allocator, &[_][]const u8{ cgroup_cpu_path, "cpu.cfs_quota_us" }) catch |err| {
+        log.debug("failed to join cgroup path: {}\n", .{err});
+        return err;
+    };
+    const cgroup_cpu_quota = try fs.openFileAbsolute(cgroup_cpu_quota_path, .{ .write = true });
     defer cgroup_cpu_quota.close();
 
     const cgroup_cpu_quota_content = try fmt.allocPrint(allocator, "{}\n", .{1000});
@@ -317,7 +331,7 @@ pub fn main() anyerror!void {
 
     if (args.isPresent("init")) {
         log.debug("init\n", .{});
-        try init(allocator);
+        try init(allocator, "hogecontainer");
     } else if (args.isPresent("run")) {
         log.debug("run\n", .{});
         try run(allocator);
