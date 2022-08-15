@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -u
 
 arch=$(uname -m)
 
@@ -12,8 +12,8 @@ cp -Lr /bin/* /root/rootfs/bin
 cp -Lr /usr/bin/* /root/rootfs/bin
 
 cp -Lr /lib/${arch}-linux-gnu /root/rootfs/lib
-[ -e /lib/ld-linux-${arch}.so.2 ] && cp -Lr /lib/ld-linux-${arch}.so.2 /root/rootfs/lib
-[ -e /lib64/ld-linux-${arch}.so.2 ] && cp -Lr /lib64/ld-linux-${arch}.so.2 /root/rootfs/lib
+cp -Lr /lib/ld-linux-${arch}.so* /root/rootfs/lib
+cp -Lr /lib64/ld-linux-${arch}.so* /root/rootfs/lib
 
 cd /root/rootfs/
 ln -s lib lib64
