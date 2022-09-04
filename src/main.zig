@@ -9,15 +9,16 @@ const linux = os.linux;
 const log = std.log;
 const debug = std.debug;
 
+const cmd = @import("./cmd/lib.zig");
+
 const syscall = @import("syscall.zig");
 const util = @import("util.zig");
 
+const zig_arg = @import("zig-arg");
 const Command = zig_arg.Command;
 const flag = zig_arg.flag;
 
 const native_arch = builtin.cpu.arch;
-
-const zig_arg = @import("zig-arg");
 
 const sync_t = enum(c_int) {
     SYNC_USERMAP_PLS = 0x40,
@@ -294,8 +295,13 @@ pub fn main() anyerror!void {
         \\ Usage: runzigc SUBCOMMAND [options]
         \\
         \\ Subcommands:
-        \\   init: initialize container
-        \\   run: run a command inside the container
+        \\   init: (deprecated) initialize container
+        \\   run: (deprecated) run a command inside the container
+        \\   state: display container state
+        \\   create: create a container
+        \\   kill: send a signal to the container's init process
+        \\   start: start a container
+        \\   delete: delete a container
         \\
         \\ Options:
         \\   -h, --help     Print this help message
@@ -304,15 +310,43 @@ pub fn main() anyerror!void {
 
     var parser = Command.new(allocator, "runzigc");
     defer parser.deinit();
-
     try parser.addArg(flag.boolean("help", 'h'));
     try parser.addArg(flag.boolean("version", 'v'));
 
     var subcmd_init = Command.new(allocator, "init");
+    try subcmd_init.addArg(flag.boolean("help", 'h'));
     try parser.addSubcommand(subcmd_init);
 
     var subcmd_run = Command.new(allocator, "run");
+    try subcmd_run.addArg(flag.boolean("help", 'h'));
     try parser.addSubcommand(subcmd_run);
+
+    var subcmd_state = Command.new(allocator, "state");
+    try subcmd_state.addArg(flag.boolean("help", 'h'));
+    try subcmd_state.takesSingleValue("CONTAINER_ID");
+    // subcmd_state.argRequired(false);
+    try parser.addSubcommand(subcmd_state);
+
+    var subcmd_start = Command.new(allocator, "start");
+    try subcmd_start.addArg(flag.boolean("help", 'h'));
+    try subcmd_start.takesSingleValue("CONTAINER_ID");
+    try parser.addSubcommand(subcmd_start);
+
+    var subcmd_create = Command.new(allocator, "create");
+    try subcmd_create.addArg(flag.boolean("help", 'h'));
+    try subcmd_create.takesSingleValue("CONTAINER_ID");
+    try subcmd_create.takesSingleValue("BUNDLE_PATH");
+    try parser.addSubcommand(subcmd_create);
+
+    var subcmd_kill = Command.new(allocator, "kill");
+    try subcmd_kill.addArg(flag.boolean("help", 'h'));
+    try subcmd_kill.takesSingleValue("CONTAINER_ID");
+    try subcmd_kill.takesSingleValue("SIGNAL");
+    try parser.addSubcommand(subcmd_kill);
+
+    var subcmd_delete = Command.new(allocator, "delete");
+    try subcmd_delete.takesSingleValue("CONTAINER_ID");
+    try parser.addSubcommand(subcmd_delete);
 
     var args = try parser.parseProcess();
     defer args.deinit();
@@ -329,14 +363,123 @@ pub fn main() anyerror!void {
         return;
     }
 
+    // Deprecated commands
     if (args.isPresent("init")) {
         log.debug("init\n", .{});
         try init(allocator, "hogecontainer");
     } else if (args.isPresent("run")) {
         log.debug("run\n", .{});
         try run(allocator);
-    } else {
-        debug.print("{s}\n", .{help_message});
+    }
+
+    if (args.subcommandContext("state")) |sub_args| {
+        log.debug("state\n", .{});
+
+        if (sub_args.isPresent("CONTAINER_ID")) {
+            const container_id = sub_args.valueOf("CONTAINER_ID").?;
+
+            log.debug("CONTAINER_ID={s}", .{container_id});
+            return;
+        }
+
+        const state_help_message =
+            \\ runzigc state - output the state of a container
+            \\
+            \\ Usage: runzigc state [options] <container-id>
+            \\
+            \\ Options:
+            \\     -h, --help     Show this message
+        ;
+        debug.print("{s}\n", .{state_help_message});
         os.exit(1);
     }
+
+    if (args.subcommandContext("start")) |sub_args| {
+        log.debug("start\n", .{});
+
+        if (sub_args.isPresent("CONTAINER_ID")) {
+            const container_id = sub_args.valueOf("CONTAINER_ID").?;
+
+            log.debug("CONTAINER_ID={s}", .{container_id});
+            return;
+        }
+
+        const start_help_message =
+            \\ runzigc start - start container
+            \\
+            \\ Usage: runzigc start [options] <container-id>
+            \\
+            \\ Options:
+            \\     -h, --help     Show this message
+        ;
+        debug.print("{s}\n", .{start_help_message});
+        os.exit(1);
+    }
+
+    if (args.subcommandContext("create")) |sub_args| {
+        log.debug("create\n", .{});
+
+        if (sub_args.isPresent("CONTAINER_ID") and sub_args.isPresent("BUNDLE_PATH")) {
+            const container_id = sub_args.valueOf("CONTAINER_ID").?;
+            const bundle_path = sub_args.valueOf("BUNDLE_PATH").?;
+
+            log.debug("CONTAINER_ID={s}, BUNDLE_PATH={s}", .{ container_id, bundle_path });
+            return;
+        }
+        const create_help_message =
+            \\ runzigc create - create container
+            \\
+            \\ Usage: runzigc create [options] <container-id> <bundle-path>
+            \\
+            \\ Options:
+            \\     -h, --help     Show this message
+        ;
+        debug.print("{s}\n", .{create_help_message});
+        os.exit(1);
+    }
+
+    if (args.subcommandContext("kill")) |sub_args| {
+        log.debug("kill\n", .{});
+        if (sub_args.isPresent("CONTAINER_ID") and sub_args.isPresent("SIGNAL")) {
+            const container_id = sub_args.valueOf("CONTAINER_ID").?;
+            const signal = sub_args.valueOf("SIGNAL").?;
+
+            log.debug("CONTAINER_ID={s}, SIGNAL={s}", .{ container_id, signal });
+            return;
+        }
+        const kill_help_message =
+            \\ runzigc kill - send signal to container
+            \\
+            \\ Usage: runzigc kill [options] <container-id> <signal>
+            \\
+            \\ Options:
+            \\     -h, --help     Show this message
+        ;
+        debug.print("{s}\n", .{kill_help_message});
+        os.exit(1);
+    }
+
+    if (args.subcommandContext("delete")) |sub_args| {
+        log.debug("delete\n", .{});
+        if (sub_args.isPresent("CONTAINER_ID")) {
+            const container_id = sub_args.valueOf("CONTAINER_ID").?;
+
+            log.debug("CONTAINER_ID={s}", .{container_id});
+            return;
+        }
+
+        const delete_help_message =
+            \\ runzigc delete - delete a container
+            \\
+            \\ Usage: runzigc delete [options] <container-id>
+            \\
+            \\ Options:
+            \\     -h, --help     Show this message
+        ;
+        debug.print("{s}\n", .{delete_help_message});
+        os.exit(1);
+    }
+
+    debug.print("{s}\n", .{help_message});
+    os.exit(1);
 }
