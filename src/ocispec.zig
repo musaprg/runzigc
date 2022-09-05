@@ -11,6 +11,7 @@ const RuntimeSpec = struct {
     root: Root,
     mounts: []Mount = &[_]Mount{},
     // TODO(musaprg): implement POSIX-platform hooks https://github.com/opencontainers/runtime-spec/blob/main/config.md#posix-platform-hooks
+    linux: Linux,
 };
 
 // TODO(musaprg): take care about optional
@@ -24,6 +25,105 @@ const Mount = struct {
     source: []const u8,
     options: []const []const u8 = &[_][]const u8{},
     type: []const u8,
+};
+
+const Linux = struct {
+    namespaces: []Namespace,
+    uidMappings: []UidMapping,
+    devices: []Device,
+    cgroupsPath: []const u8,
+};
+
+const Namespace = struct {
+    type: []const u8,
+    path: ?[]const u8 = null,
+};
+
+const UidMapping = struct {
+    containerID: u32,
+    hostID: u32,
+    size: u32,
+};
+
+const Device = struct {
+    type: []const u8,
+    path: []const u8,
+    major: i64,
+    minor: i64,
+    fileMode: u32,
+    uid: u32,
+    gid: u32,
+};
+
+const CgroupResource = struct {
+    cpu: Cpu,
+    memory: Memory,
+    devices: []AllowedDevice,
+};
+
+const Cpu = struct {
+    shares: u64,
+    quota: i64,
+    period: i64,
+    realtimeRuntime: i64,
+    realtimePeriod: i64,
+    cpus: []const u8,
+    mems: []const u8,
+    idle: i64,
+};
+
+const Memory = struct {
+    limit: i64,
+    reservation: i64,
+    swap: i64,
+    kernel: i64,
+    kernelTCP: i64,
+};
+
+const AllowedDevice = struct {
+    allow: bool,
+    type: []const u8,
+    major: i64,
+    minor: i64,
+    access: []const u8,
+};
+
+const BlockIo = struct {
+    weight: u16,
+    leafWeight: u16,
+    weightDevice: []WeightDevice,
+    throttleReadBpsDevice: []DeviceRateLimit,
+    throttleWriteBpsDevice: []DeviceRateLimit,
+    throttleReadIOPSDevice: []DeviceRateLimit,
+    throttleWriteIOPSDevice: []DeviceRateLimit,
+};
+
+const WeightDevice = struct {
+    major: i64,
+    minor: i64,
+    weight: u16,
+    leafWeight: u16,
+};
+
+const DeviceRateLimit = struct {
+    major: i64,
+    minor: i64,
+    rate: u64,
+};
+
+const HugepageLimit = struct {
+    pageSize: []const u8,
+    limit: u64,
+};
+
+const Network = struct {
+    classID: u32,
+    priorities: []NetworkPriority,
+};
+
+const NetworkPriority = struct {
+    name: []const u8,
+    priority: u32,
 };
 
 allocator: Allocator,
@@ -41,6 +141,7 @@ pub fn new(allocator: Allocator, path: []const u8) !OciSpec {
 
     const options = std.json.ParseOptions{
         .allocator = allocator,
+        // TODO(musaprg): change this to false finally to validate schema
         .ignore_unknown_fields = true,
         .allow_trailing_data = true,
     };
