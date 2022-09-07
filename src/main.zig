@@ -364,10 +364,10 @@ pub fn main() anyerror!void {
     // Deprecated commands
     if (args.isPresent("init")) {
         log.debug("init\n", .{});
-        try init(allocator, "hogecontainer");
+        return try init(allocator, "hogecontainer");
     } else if (args.isPresent("run")) {
         log.debug("run\n", .{});
-        try run(allocator);
+        return try run(allocator);
     }
 
     if (args.subcommandContext("state")) |sub_args| {
