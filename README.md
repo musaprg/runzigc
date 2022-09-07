@@ -10,6 +10,12 @@ CAUTION: Zig language is still under active development, so building with the la
 
 ## Build
 
+Before build, you need to fetch submodules.
+
+```
+$ git submodule update --init --recursive
+```
+
 ### Debug build
 
 ```
