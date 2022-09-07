@@ -9,8 +9,6 @@ const linux = os.linux;
 const log = std.log;
 const debug = std.debug;
 
-const cmd = @import("./cmd/lib.zig");
-
 const syscall = @import("syscall.zig");
 const util = @import("util.zig");
 
