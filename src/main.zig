@@ -9,6 +9,8 @@ const linux = os.linux;
 const log = std.log;
 const debug = std.debug;
 
+const Allocator = mem.Allocator;
+
 const syscall = @import("syscall.zig");
 const util = @import("util.zig");
 
@@ -22,6 +24,8 @@ const sync_t = enum(c_int) {
     SYNC_USERMAP_PLS = 0x40,
     SYNC_USERMAP_ACK = 0x41,
 };
+
+const default_root_path = "/var/lib/runzigc";
 
 // set hostname and exec passed command
 fn init(allocator: mem.Allocator, container_id: []const u8) !void {
@@ -279,6 +283,61 @@ fn run(allocator: mem.Allocator) !void {
     }
 }
 
+// TODO(musaprg): error handling
+fn state(allocator: Allocator, container_id: []const u8) !void {
+    _ = container_id;
+    _ = allocator;
+}
+
+// TODO(musaprg): error handling
+fn create(allocator: Allocator, root_path: []const u8, container_id: []const u8, bundle_path: []const u8) !void {
+    _ = container_id;
+    _ = bundle_path;
+    const container_root_path = fs.path.join(allocator, &[_][]const u8{ root_path, container_id }) catch |err| {
+        log.debug("failed to join container root path: {}\n", .{err});
+        return err;
+    };
+
+    util.mkdirAll(root_path, 0700) catch |err| {
+        switch (err) {
+            error.PathAlreadyExists => {},
+            else => {
+                log.debug("mkdir failed: {}\n", .{err});
+                return err;
+            },
+        }
+    };
+
+    if (fs.accessAbsolute(container_root_path, .{})) {
+        return error.FileExists;
+    } else |err| switch (err) {
+        else => return err,
+    }
+
+    try util.mkdirAll(container_root_path, 0700);
+
+    // TODO(musaprg): create process
+}
+
+// TODO(musaprg): error handling
+fn start(allocator: Allocator, container_id: []const u8) !void {
+    _ = container_id;
+    _ = allocator;
+}
+
+// TODO(musaprg): error handling
+fn kill(allocator: Allocator, container_id: []const u8, signal: []const u8) !void {
+    _ = container_id;
+    _ = signal;
+    _ = allocator;
+}
+
+// TODO(musaprg): error handling
+fn delete(allocator: Allocator, container_id: []const u8) !void {
+    _ = container_id;
+    _ = allocator;
+}
+
 // Use fork and unshare to create a new process with a new PID
 // youki: https://github.com/containers/youki/blob/619ae7d1eccbd82fd116465ed25ef410ace2a2a1/crates/libcontainer/src/process/container_main_process.rs#L206-L240
 pub fn main() anyerror!void {
@@ -422,7 +481,7 @@ pub fn main() anyerror!void {
             const bundle_path = sub_args.valueOf("BUNDLE_PATH").?;
 
             log.debug("CONTAINER_ID={s}, BUNDLE_PATH={s}", .{ container_id, bundle_path });
-            return;
+            return try create(allocator, default_root_path, container_id, bundle_path);
         }
         const create_help_message =
             \\ runzigc create - create container
