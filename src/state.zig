@@ -17,7 +17,7 @@ const ocispec = @import("ocispec.zig");
 
 const state_file_name = "state.json";
 
-const State = struct {
+pub const State = struct {
     /// Container ID
     id: []const u8,
     /// PID of init process
