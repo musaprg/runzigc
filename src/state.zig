@@ -78,3 +78,5 @@ pub fn read(
 pub fn deinit(self: *const ContainerState, state: State) void {
     std.json.parseFree(State, state, self.parse_options);
 }
+
+// TODO(musaprg): write test
