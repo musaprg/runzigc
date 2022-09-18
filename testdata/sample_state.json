@@ -1,0 +1,39 @@
+{
+    "id": "bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+    "init_process_pid": 393,
+    "init_process_start": 3164,
+    "created": "2022-09-18T06:36:31.3214015Z",
+    "config": {},
+    "rootless": false,
+    "cgroup_paths": {
+      "": "/sys/fs/cgroup/unified/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "blkio": "/sys/fs/cgroup/blkio/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "cpu": "/sys/fs/cgroup/cpu/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "cpuacct": "/sys/fs/cgroup/cpuacct/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "cpuset": "/sys/fs/cgroup/cpuset/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "devices": "/sys/fs/cgroup/devices/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "freezer": "/sys/fs/cgroup/freezer/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "hugetlb": "/sys/fs/cgroup/hugetlb/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "memory": "/sys/fs/cgroup/memory/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "net_cls": "/sys/fs/cgroup/net_cls/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "net_prio": "/sys/fs/cgroup/net_prio/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "perf_event": "/sys/fs/cgroup/perf_event/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "pids": "/sys/fs/cgroup/pids/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af",
+      "rdma": "/sys/fs/cgroup/rdma/runzigc/bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af"
+    },
+    "namespace_paths": {
+      "NEWCGROUP": "/proc/393/ns/cgroup",
+      "NEWIPC": "/proc/393/ns/ipc",
+      "NEWNET": "/proc/393/ns/net",
+      "NEWNS": "/proc/393/ns/mnt",
+      "NEWPID": "/proc/393/ns/pid",
+      "NEWUSER": "/proc/393/ns/user",
+      "NEWUTS": "/proc/393/ns/uts"
+    },
+    "external_descriptors": [
+      "/dev/null",
+      "pipe:[32782]",
+      "pipe:[32783]"
+    ]
+  }
+  
