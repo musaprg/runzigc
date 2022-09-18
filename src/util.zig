@@ -89,6 +89,43 @@ test "make multiple directories" {
     }
 }
 
+pub const MkdirTempError = MkdirAllError || RandomStringError;
+
+/// Create temporary directory with random name to the specified path
+pub fn mkdirTemp(allocator: Allocator, dir: []const u8) MkdirTempError![]const u8 {
+    const now = std.time.timestamp();
+
+    var parent_path = dir;
+    if (dir.len == 0) {
+        // TODO(musaprg): avoid hard-coding
+        parent_path = "/tmp";
+    }
+    var prng = rand.DefaultPrng.init(@intCast(u64, now));
+    const random = prng.random();
+    const max_retry = 10;
+    const length = 10;
+    for ([_]u0{0} ** max_retry) |_| {
+        const file_name = try randomString(allocator, random, length);
+        log.debug("mkdirTemp: try to create '{s}'", .{file_name});
+        const path = try fs.path.join(allocator, &[_][]const u8{ parent_path, file_name });
+        mkdirAll(path, 0o0700) catch |err| switch (err) {
+            error.PathAlreadyExists => continue,
+            else => return err,
+        };
+        return path;
+    }
+    return error.PathAlreadyExists;
+}
+
+test "mkdirTemp" {
+    // TODO(musaprg): testing.allocator leaks, needs investigation
+    const allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    const path = try mkdirTemp(allocator, "");
+    defer {
+        fs.deleteDirAbsolute(path) catch {};
+    }
+}
+
 pub const CreateTempFileError = fs.File.OpenError || RandomStringError;
 
 /// Create temporary file with random name in the specified dir
@@ -109,7 +146,7 @@ pub fn createTempFile(allocator: Allocator, dir: []const u8) CreateTempFileError
         log.debug("createTempFile: try to create '{s}'", .{file_name});
         const path = try fs.path.join(allocator, &[_][]const u8{ parent_path, file_name });
         _ = fs.createFileAbsolute(path, .{}) catch |err| switch (err) {
-            //error.PathAlreadyExists => continue,
+            error.PathAlreadyExists => continue,
             else => return err,
         };
         return path;
