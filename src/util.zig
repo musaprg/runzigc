@@ -4,10 +4,12 @@ const os = std.os;
 const fs = std.fs;
 const fmt = std.fmt;
 const mem = std.mem;
+const Allocator = mem.Allocator;
 const heap = std.heap;
 const linux = os.linux;
 const log = std.log;
 const debug = std.debug;
+const rand = std.rand;
 const native_arch = builtin.cpu.arch;
 const testing = std.testing;
 
@@ -85,4 +87,64 @@ test "make multiple directories" {
         const r = os.access(dir_child, os.X_OK) catch |err| return err;
         try testing.expect(r == {});
     }
+}
+
+pub const CreateTempFileError = fs.File.OpenError || RandomStringError;
+
+/// Create temporary file with random name in the specified dir
+pub fn createTempFile(allocator: Allocator, dir: []const u8) CreateTempFileError![]const u8 {
+    const now = std.time.timestamp();
+
+    var parent_path = dir;
+    if (dir.len == 0) {
+        // TODO(musaprg): avoid hard-coding
+        parent_path = "/tmp";
+    }
+    var prng = rand.DefaultPrng.init(@intCast(u64, now));
+    const random = prng.random();
+    const max_retry = 10;
+    const length = 10;
+    for ([_]u0{0} ** max_retry) |_| {
+        const file_name = try randomString(allocator, random, length);
+        log.debug("createTempFile: try to create '{s}'", .{file_name});
+        const path = try fs.path.join(allocator, &[_][]const u8{ parent_path, file_name });
+        _ = fs.createFileAbsolute(path, .{}) catch |err| switch (err) {
+            //error.PathAlreadyExists => continue,
+            else => return err,
+        };
+        return path;
+    }
+    return error.PathAlreadyExists;
+}
+
+test "createTempFile" {
+    // TODO(musaprg): testing.allocator leaks, needs investigation
+    const allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    const path = try createTempFile(allocator, "");
+    defer {
+        fs.deleteFileAbsolute(path) catch {};
+    }
+}
+
+pub const RandomStringError = mem.Allocator.Error;
+
+/// Generate random string
+pub fn randomString(allocator: Allocator, random: rand.Random, n: usize) RandomStringError![]const u8 {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    var items = try allocator.alloc(u8, n);
+    for (items) |*item| {
+        const random_pos = random.intRangeLessThan(usize, 0, chars.len);
+        item.* = chars[random_pos];
+    }
+
+    return items;
+}
+
+test "randomString" {
+    // TODO(musaprg): testing.allocator leaks, needs investigation
+    const allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    var prng = rand.DefaultPrng.init(0);
+    const random = prng.random();
+    _ = try randomString(allocator, random, 10);
 }
