@@ -21,10 +21,11 @@ const State = struct {
     /// Container ID
     id: []const u8,
     /// PID of init process
-    init_process_pid: i64,
+    init_process_pid: os.pid_t,
     init_process_start: u64,
-    /// Created timestamp
-    created: i64,
+    /// Created timestamp in ISO6801
+    // TODO(musaprg): fix to marshal/unmarshal to zig's time object
+    created: []const u8,
     /// Container configuration in OCI spec format
     config: ocispec.RuntimeSpec,
 };
@@ -80,3 +81,14 @@ pub fn deinit(self: *const ContainerState, state: State) void {
 }
 
 // TODO(musaprg): write test
+test "read" {
+    var allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+
+    const path = "./testdata";
+    const container_state = try ContainerState.new(allocator, path);
+    const state = try container_state.read();
+    try testing.expect(mem.eql(u8, "bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af", state.id));
+    try testing.expectEqual(@intCast(os.pid_t, 393), state.init_process_pid);
+    try testing.expectEqual(@intCast(u64, 3164), state.init_process_start);
+    try testing.expect(mem.eql(u8, "2022-09-18T06:36:31.3214015Z", state.created));
+}
