@@ -1,4 +1,4 @@
-const ContainerState = @This();
+const StateManager = @This();
 
 // subset of libcontainer's state
 // ref(BaseState): https://github.com/opencontainers/runc/blob/v1.1.4/libcontainer/container.go
@@ -59,7 +59,7 @@ allocator: Allocator,
 parse_options: std.json.ParseOptions,
 path: []const u8,
 
-pub fn new(allocator: Allocator, root_path: []const u8) !ContainerState {
+pub fn new(allocator: Allocator, root_path: []const u8) !StateManager {
     const options = std.json.ParseOptions{
         .allocator = allocator,
         // TODO(musaprg): change this to false finally to validate schema
@@ -67,7 +67,7 @@ pub fn new(allocator: Allocator, root_path: []const u8) !ContainerState {
         .allow_trailing_data = true,
     };
     const path = try fs.path.join(allocator, &[_][]const u8{ root_path, state_file_name });
-    return ContainerState{
+    return StateManager{
         .allocator = allocator,
         .parse_options = options,
         .path = path,
@@ -75,7 +75,7 @@ pub fn new(allocator: Allocator, root_path: []const u8) !ContainerState {
 }
 
 pub fn write(
-    self: *const ContainerState,
+    self: *const StateManager,
     state: State,
 ) !void {
     const path = try util.createTempFile(self.allocator, "");
@@ -87,7 +87,7 @@ pub fn write(
 }
 
 pub fn read(
-    self: *const ContainerState,
+    self: *const StateManager,
 ) !State {
     const file = try std.fs.cwd().openFile(self.path, .{});
     defer file.close();
@@ -101,7 +101,7 @@ pub fn read(
     return state;
 }
 
-pub fn deinit(self: *const ContainerState, state: State) void {
+pub fn deinit(self: *const StateManager, state: State) void {
     std.json.parseFree(State, state, self.parse_options);
 }
 
@@ -110,7 +110,7 @@ test "read" {
     var allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
 
     const path = "./testdata";
-    const container_state = try ContainerState.new(allocator, path);
+    const container_state = try StateManager.new(allocator, path);
     const state = try container_state.read();
     try testing.expect(mem.eql(u8, "bd63ddfb3fda11986b6caa3a85aa6ac6a7def43e0d3298956e3891b91804a1af", state.id));
     try testing.expectEqual(@intCast(os.pid_t, 393), state.init_process_pid);
