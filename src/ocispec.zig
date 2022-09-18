@@ -6,7 +6,7 @@ const mem = std.mem;
 const meta = std.meta;
 const Allocator = mem.Allocator;
 
-const RuntimeSpec = struct {
+pub const RuntimeSpec = struct {
     ociVersion: []const u8,
     root: Root,
     mounts: []Mount = &[_]Mount{},
