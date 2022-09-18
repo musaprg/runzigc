@@ -118,8 +118,9 @@ pub fn mkdirTemp(allocator: Allocator, dir: []const u8) MkdirTempError![]const u
 }
 
 test "mkdirTemp" {
-    // TODO(musaprg): testing.allocator leaks, needs investigation
-    const allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    var allocator = arena.allocator();
     const path = try mkdirTemp(allocator, "");
     defer {
         fs.deleteDirAbsolute(path) catch {};
@@ -158,8 +159,9 @@ pub fn createTempFile(allocator: Allocator, dir: []const u8) CreateTempFileError
 }
 
 test "createTempFile" {
-    // TODO(musaprg): testing.allocator leaks, needs investigation
-    const allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    var allocator = arena.allocator();
     const path = try createTempFile(allocator, "");
     defer {
         fs.deleteFileAbsolute(path) catch {};
@@ -184,8 +186,9 @@ pub fn randomString(allocator: Allocator, random: rand.Random, n: usize) RandomS
 }
 
 test "randomString" {
-    // TODO(musaprg): testing.allocator leaks, needs investigation
-    const allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    var allocator = arena.allocator();
     var prng = rand.DefaultPrng.init(0);
     const random = prng.random();
     _ = try randomString(allocator, random, 10);
