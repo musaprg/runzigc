@@ -26,8 +26,33 @@ pub const State = struct {
     /// Created timestamp in ISO6801
     // TODO(musaprg): fix to marshal/unmarshal to zig's time object
     created: []const u8,
-    /// Container configuration in OCI spec format
-    config: ocispec.RuntimeSpec,
+    // TODO(musaprg): add cgroup_paths
+    // TODO(musaprg): add namespace_paths
+};
+
+const CgroupPaths = struct {
+    blkio: []const u8,
+    cpu: []const u8,
+    cpuacct: []const u8,
+    cpuset: []const u8,
+    devices: []const u8,
+    freezer: []const u8,
+    hugetlb: []const u8,
+    memory: []const u8,
+    net_cls: []const u8,
+    net_prio: []const u8,
+    perf_event: []const u8,
+    pids: []const u8,
+    rdma: []const u8,
+};
+
+const NamespacePaths = struct {
+    NEWCGROUP: []const u8,
+    NEWIPC: []const u8,
+    NEWNET: []const u8,
+    NEWNS: []const u8,
+    NEWUSER: []const u8,
+    NEWUTS: []const u8,
 };
 
 allocator: Allocator,
