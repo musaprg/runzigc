@@ -25,7 +25,7 @@ const sync_t = enum(c_int) {
     SYNC_USERMAP_ACK = 0x41,
 };
 
-const default_root_path = "/var/lib/runzigc";
+const default_root_path = "/var/run/runzigc";
 
 // set hostname and exec passed command
 fn init(allocator: mem.Allocator, container_id: []const u8) !void {
