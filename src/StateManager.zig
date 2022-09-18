@@ -13,7 +13,7 @@ const fs = std.fs;
 const Allocator = mem.Allocator;
 
 const util = @import("util.zig");
-const ocispec = @import("ocispec.zig");
+const OciSpec = @import("OciSpec.zig");
 
 const state_file_name = "state.json";
 
@@ -107,7 +107,9 @@ pub fn deinit(self: *const StateManager, state: State) void {
 
 // TODO(musaprg): write test
 test "read" {
-    var allocator = std.heap.ArenaAllocator.init(std.heap.page_allocator).allocator();
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    var allocator = arena.allocator();
 
     const path = "./testdata";
     const container_state = try StateManager.new(allocator, path);
