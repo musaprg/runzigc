@@ -147,10 +147,11 @@ pub fn createTempFile(allocator: Allocator, dir: []const u8) CreateTempFileError
         const file_name = try randomString(allocator, random, length);
         log.debug("createTempFile: try to create '{s}'", .{file_name});
         const path = try fs.path.join(allocator, &[_][]const u8{ parent_path, file_name });
-        _ = fs.createFileAbsolute(path, .{}) catch |err| switch (err) {
+        const file = fs.createFileAbsolute(path, .{}) catch |err| switch (err) {
             error.PathAlreadyExists => continue,
             else => return err,
         };
+        defer file.close();
         return path;
     }
     return error.PathAlreadyExists;
