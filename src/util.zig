@@ -124,6 +124,8 @@ test "mkdirTemp" {
     defer {
         fs.deleteDirAbsolute(path) catch {};
     }
+    const s = try syscall.stat(path);
+    try testing.expect(syscall.isDir(s));
 }
 
 pub const CreateTempFileError = fs.File.OpenError || RandomStringError;
@@ -161,6 +163,8 @@ test "createTempFile" {
     defer {
         fs.deleteFileAbsolute(path) catch {};
     }
+    const s = try syscall.stat(path);
+    try testing.expect(!syscall.isDir(s));
 }
 
 pub const RandomStringError = mem.Allocator.Error;
