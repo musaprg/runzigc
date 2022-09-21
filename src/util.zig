@@ -21,6 +21,7 @@ pub const MkdirAllError = os.MakeDirError || syscall.LinuxKernelError;
 pub fn mkdirAll(path: []const u8, mode: u32) MkdirAllError!void {
     // Fast path learned from Go source
     //  https://cs.opensource.google/go/go/+/refs/tags/go1.19:src/os/path.go;l=18
+    // TODO(musaprg): use os.fstatat(os.AT.FDCWD, path, 0) instead
     if (syscall.stat(path)) |s| {
         if (syscall.isDir(s)) {
             log.debug("mkdirAll: path already exists: {s}", .{path});
