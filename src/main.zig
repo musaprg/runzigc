@@ -38,6 +38,10 @@ fn init(allocator: mem.Allocator, container_id: []const u8) !void {
 
     var status: usize = undefined;
 
+    try syscall.setsid();
+    try os.setuid(0);
+    try os.setgid(0);
+
     const hostname = "test";
     syscall.sethostname(hostname) catch |err| {
         log.debug("sethostname failed\n", .{});
@@ -137,6 +141,12 @@ fn init(allocator: mem.Allocator, container_id: []const u8) !void {
         },
     }
 
+    // unshare cgroups namespace
+    if (linux.unshare(linux.CLONE.NEWCGROUP) == -1) {
+        log.debug("unshare failed\n", .{});
+        os.exit(1);
+    }
+
     const child_args = [_:null]?[*:0]const u8{ "/bin/sh", null };
     const envp = [_:null]?[*:0]const u8{null};
     return os.execveZ("/bin/sh", &child_args, &envp);
@@ -160,8 +170,8 @@ fn run(allocator: mem.Allocator) !void {
     if (cpid == 0) { // child
         var syncfd = syncsocket[0];
 
-        const flags = linux.CLONE.NEWIPC | linux.CLONE.NEWNET | linux.CLONE.NEWUSER | linux.CLONE.NEWUTS | linux.CLONE.NEWPID | linux.CLONE.NEWNS;
-        if (linux.unshare(flags) == -1) {
+        // At first, unshare user namespace
+        if (linux.unshare(linux.CLONE.NEWUSER) == -1) {
             log.debug("unshare failed\n", .{});
             os.exit(1);
         }
@@ -187,18 +197,17 @@ fn run(allocator: mem.Allocator) !void {
             else => unreachable,
         }
 
-        syscall.setsid() catch |err| {
-            log.debug("setresuid failed\n", .{});
-            return err;
-        };
-
+        // become root
         if (linux.setresuid(0, 0, 0) == -1) {
             log.debug("setresuid failed\n", .{});
             return error.Unexpected;
         }
-        if (linux.setresgid(0, 0, 0) == -1) {
-            log.debug("setresgid failed\n", .{});
-            return error.Unexpected;
+
+        // unshare remaining namespaces
+        const flags = linux.CLONE.NEWIPC | linux.CLONE.NEWNET | linux.CLONE.NEWUTS | linux.CLONE.NEWPID | linux.CLONE.NEWNS;
+        if (linux.unshare(flags) == -1) {
+            log.debug("unshare failed\n", .{});
+            os.exit(1);
         }
 
         var gcpid = os.fork() catch {
