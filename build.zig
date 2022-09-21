@@ -33,6 +33,9 @@ pub fn build(b: *std.build.Builder) void {
     exe_tests.setTarget(target);
     exe_tests.setBuildMode(mode);
 
+    // Test dependencies
+    exe_tests.addPackagePath("zig-arg", "lib/zig-arg/src/lib.zig");
+
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
 }
