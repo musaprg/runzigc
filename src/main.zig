@@ -18,6 +18,11 @@ const zig_arg = @import("zig-arg");
 const Command = zig_arg.Command;
 const flag = zig_arg.flag;
 
+comptime {
+    // Mark all imported packages as test targets
+    std.testing.refAllDecls(@This());
+}
+
 const native_arch = builtin.cpu.arch;
 
 const sync_t = enum(c_int) {
