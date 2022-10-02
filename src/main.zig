@@ -359,27 +359,6 @@ pub fn main() anyerror!void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    // TODO(musaprg): automatic generation
-    const help_message =
-        \\ runzigc - a simple container runtime written in zig
-        \\
-        \\ Usage: runzigc SUBCOMMAND [options]
-        \\
-        \\ Subcommands:
-        \\   init: (deprecated) initialize container
-        \\   run: (deprecated) run a command inside the container
-        \\   state: display container state
-        \\   create: create a container
-        \\   kill: send a signal to the container's init process
-        \\   start: start a container
-        \\   delete: delete a container
-        \\
-        \\ Options:
-        \\   -h, --help     Print this help message
-        \\   -v, --version  Print the version
-    ;
-    _ = help_message;
-
     var app = Yazap.init(allocator, "runzigc", "a simple container runtime written in zig");
     defer app.deinit();
 
@@ -413,8 +392,9 @@ pub fn main() anyerror!void {
 
     var args = try app.parseProcess();
 
-    if (args.isPresent("help")) {
-        debug.print("{s}\n", .{help_message});
+    if (!(args.hasArgs())) {
+        try app.displayHelp();
+        app.deinit();
         os.exit(1);
     }
 
